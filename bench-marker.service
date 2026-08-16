@@ -1,0 +1,21 @@
+[Unit]
+Description=Bench Marker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bench-marker
+Group=bench-marker
+WorkingDirectory=/opt/bench-marker
+ExecStart=/usr/bin/python3 /opt/bench-marker/server.py
+Restart=on-failure
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+Environment=HOST=127.0.0.1
+Environment=PORT=8796
+Environment=BENCH_MARKER_DATA_DIR=/var/lib/bench-marker
+EnvironmentFile=-/etc/bench-marker.env
+
+[Install]
+WantedBy=multi-user.target

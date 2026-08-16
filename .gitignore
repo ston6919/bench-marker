@@ -1,0 +1,34 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+
+# Python caches and tooling
+__pycache__/
+*.py[cod]
+.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# JavaScript dependencies and downloaded browsers
+**/node_modules/
+
+# Runtime state, prompts, model output, logs, and generated media
+data/*
+!data/.gitkeep
+renders/
+
+# Generated Strudel browser bundle (rebuilt by npm install/build)
+strudel-template/public/bundle.js
+
+# Local prototype/output project; not part of Bench Marker
+split-screen-comparison/
+
+# Editor and operating-system files
+.DS_Store
+.idea/
+.vscode/
+*.swp

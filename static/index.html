@@ -1,0 +1,4738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bench Marker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #0b0d12;
+      --bg-soft: #efeee9;
+      --panel: #ffffff;
+      --text: #14151a;
+      --muted: #6a6d76;
+      --muted-2: #8b8f99;
+      --line: #ebe9e4;
+      --line-strong: #ddd9d1;
+      --accent: #1f4b99;
+      --accent-soft: #e8eef9;
+      --accent-hover: #183d7d;
+      --good: #0f766e;
+      --good-soft: #e6f5f3;
+      --warn: #a15c07;
+      --warn-soft: #fff6e5;
+      --bad: #c0353a;
+      --bad-soft: #fdeced;
+      --shadow-sm: 0 1px 2px rgba(20, 21, 26, 0.04);
+      --shadow: 0 1px 2px rgba(20, 21, 26, 0.04), 0 8px 24px rgba(20, 21, 26, 0.04);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --font: "DM Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font);
+      color: var(--text);
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(ellipse 1100px 560px at 12% -8%, rgba(91, 141, 239, 0.16), transparent 58%),
+        radial-gradient(ellipse 900px 480px at 96% 0%, rgba(124, 92, 214, 0.12), transparent 55%),
+        radial-gradient(ellipse 800px 500px at 50% 110%, rgba(40, 140, 140, 0.08), transparent 55%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cdefs%3E%3Cpattern id='p' width='60' height='60' patternUnits='userSpaceOnUse'%3E%3Cpath d='M0 60L60 0M30 60L60 30M0 30L30 0M-15 15L15 -15M45 75L75 45' stroke='rgba(255,255,255,0.035)' stroke-width='1' fill='none'/%3E%3Ccircle cx='30' cy='30' r='1.1' fill='rgba(255,255,255,0.045)'/%3E%3Ccircle cx='0' cy='0' r='0.7' fill='rgba(255,255,255,0.03)'/%3E%3Ccircle cx='60' cy='60' r='0.7' fill='rgba(255,255,255,0.03)'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='120' height='120' fill='url(%23p)'/%3E%3C/svg%3E");
+      background-attachment: fixed;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .wrap {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 32px 0 80px;
+    }
+
+    header.app {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      flex: 0 0 auto;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #1f4b99 0%, #3d6ec9 55%, #6b8fd4 100%);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: -0.04em;
+      box-shadow: 0 8px 20px rgba(31, 75, 153, 0.22);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.45rem, 2.4vw, 1.85rem);
+      letter-spacing: -0.04em;
+      font-weight: 700;
+      line-height: 1.15;
+      color: #f2f4f8;
+    }
+
+    .subtitle {
+      margin: 4px 0 0;
+      color: rgba(232, 234, 240, 0.72);
+      font-size: 0.92rem;
+      line-height: 1.45;
+      max-width: 520px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 14px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(8px);
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: border-color 120ms ease, background 120ms ease;
+    }
+
+    .status-pill:hover {
+      border-color: var(--line-strong);
+      background: #fff;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--warn);
+      box-shadow: 0 0 0 3px rgba(161, 92, 7, 0.12);
+    }
+
+    .dot.ok {
+      background: var(--good);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+
+    nav.tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 22px;
+      padding: 5px;
+      background: rgba(255,255,255,0.88);
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(10px);
+    }
+
+    nav.tabs button {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font: inherit;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+    }
+
+    nav.tabs button:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    nav.tabs button.active {
+      color: var(--text);
+      background: var(--panel);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 2px);
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+
+    h2 {
+      margin: 0 0 6px;
+      font-size: 1.28rem;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted-2);
+    }
+
+    .lede {
+      margin: 0 0 22px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 0.95rem;
+      max-width: 62ch;
+    }
+
+    .empty {
+      padding: 44px 22px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius-sm);
+      background: linear-gradient(180deg, #fbfaf8, #f6f5f1);
+      line-height: 1.55;
+    }
+
+    .empty strong {
+      display: block;
+      color: var(--text);
+      margin-bottom: 6px;
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .section {
+      margin-top: 26px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+    }
+
+    .field { margin-bottom: 12px; }
+
+    label {
+      display: block;
+      margin: 0 0 7px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 550;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-sm);
+      background: #fff;
+      color: var(--text);
+      padding: 11px 12px;
+      font: inherit;
+      font-size: 0.92rem;
+      transition: border-color 120ms ease, box-shadow 120ms ease;
+    }
+
+    textarea {
+      min-height: 140px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #7d9ad4;
+      box-shadow: 0 0 0 3px rgba(31, 75, 153, 0.12);
+    }
+
+    input:disabled, button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn {
+      border: 1px solid var(--line-strong);
+      background: #fff;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font: inherit;
+      font-size: 0.88rem;
+      font-weight: 550;
+      cursor: pointer;
+      transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: #fafaf8;
+      border-color: #cfcbc2;
+    }
+
+    .btn:active:not(:disabled) { transform: translateY(1px); }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 1px 2px rgba(31, 75, 153, 0.2);
+    }
+
+    .btn.primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .btn.small {
+      padding: 7px 11px;
+      font-size: 0.82rem;
+      border-radius: 8px;
+    }
+
+    .btn.danger {
+      color: var(--bad);
+      border-color: #f0c4c6;
+      background: var(--bad-soft);
+    }
+
+    .btn.danger:hover:not(:disabled) {
+      background: #fadfe1;
+    }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .model-id {
+      display: block;
+      color: var(--muted-2);
+      font-size: 0.8rem;
+      margin-top: 3px;
+      font-family: var(--font);
+      font-weight: 500;
+    }
+
+    .price {
+      font-variant-numeric: tabular-nums;
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      color: #4b4f58;
+      white-space: nowrap;
+    }
+
+    .price.free {
+      color: var(--good);
+      font-weight: 600;
+      font-family: var(--font);
+    }
+
+    .selected-models {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .selected-model {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: #fbfaf8;
+    }
+
+    .selected-model .left {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .selected-model .name {
+      font-weight: 600;
+      font-size: 0.94rem;
+      letter-spacing: -0.02em;
+    }
+
+    .selected-model .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 5px;
+      align-items: center;
+    }
+
+    .cost-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px 9px;
+      background: #fff;
+      font-size: 0.74rem;
+      color: var(--muted);
+    }
+
+    .cost-chip strong {
+      color: var(--text);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      font-family: var(--mono);
+    }
+
+    .picker-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .model-search-wrap { position: relative; }
+
+    .model-search-wrap input[type="search"] {
+      font-size: 0.95rem;
+      padding: 12px 14px;
+      border-radius: 12px;
+    }
+
+    .model-results {
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      max-height: 300px;
+      overflow: auto;
+      box-shadow: var(--shadow);
+    }
+
+    .model-result {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      text-align: left;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+      padding: 11px 14px;
+      font: inherit;
+      cursor: pointer;
+      transition: background 100ms ease;
+    }
+
+    .model-result:last-child { border-bottom: 0; }
+
+    .model-result:hover,
+    .model-result.active {
+      background: var(--accent-soft);
+    }
+
+    .model-result .r-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    .model-result .r-id {
+      display: block;
+      margin-top: 2px;
+      font-size: 0.74rem;
+      color: var(--muted-2);
+      font-family: var(--mono);
+    }
+
+    .model-result .r-price {
+      flex: 0 0 auto;
+      text-align: right;
+      font-size: 0.76rem;
+      color: #4b4f58;
+      font-variant-numeric: tabular-nums;
+      font-family: var(--mono);
+      white-space: nowrap;
+    }
+
+    .model-result .r-price .free-tag {
+      color: var(--good);
+      font-weight: 600;
+      font-family: var(--font);
+    }
+
+    .model-results-empty {
+      padding: 18px 14px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      text-align: center;
+    }
+
+    .model-results-count {
+      margin-top: 8px;
+      font-size: 0.76rem;
+      color: var(--muted-2);
+    }
+
+    .hint {
+      margin: 8px 0 0;
+      font-size: 0.8rem;
+      color: var(--muted-2);
+      line-height: 1.5;
+    }
+
+    .scoring-box {
+      background: #fbfaf8;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: #3d414a;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    .result-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 140ms ease, border-color 140ms ease;
+    }
+
+    .result-card:hover {
+      border-color: #ddd8cf;
+      box-shadow: var(--shadow);
+    }
+
+    .result-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .result-head strong {
+      display: block;
+      font-size: 0.96rem;
+      letter-spacing: -0.02em;
+    }
+
+    .badge {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: #f7f6f3;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .badge.completed {
+      color: var(--good);
+      border-color: #b7e2dc;
+      background: var(--good-soft);
+    }
+
+    .badge.failed {
+      color: var(--bad);
+      border-color: #f0c4c6;
+      background: var(--bad-soft);
+    }
+
+    .badge.cancelled {
+      color: var(--muted);
+      border-color: var(--line-strong);
+      background: var(--bg-soft);
+    }
+
+    .badge.running,
+    .badge.pending,
+    .badge.rendering {
+      color: var(--warn);
+      border-color: #f0d6a4;
+      background: var(--warn-soft);
+      position: relative;
+      padding-left: 18px;
+    }
+
+    .badge.running::before,
+    .badge.pending::before,
+    .badge.rendering::before {
+      content: "";
+      position: absolute;
+      left: 7px;
+      top: 50%;
+      width: 6px;
+      height: 6px;
+      margin-top: -3px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 0 0 rgba(161, 92, 7, 0.45);
+      animation: badge-pulse 1.3s ease-out infinite;
+    }
+
+    @keyframes badge-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(161, 92, 7, 0.5); opacity: 1; }
+      70% { box-shadow: 0 0 0 7px rgba(161, 92, 7, 0); opacity: 0.85; }
+      100% { box-shadow: 0 0 0 0 rgba(161, 92, 7, 0); opacity: 1; }
+    }
+
+    .result-card.is-busy {
+      border-color: #e8d4a8;
+      box-shadow: 0 0 0 1px rgba(161, 92, 7, 0.08), var(--shadow-sm);
+    }
+
+    .result-card.is-busy .result-head {
+      background: linear-gradient(90deg, #fffaf0, #fff, #fffaf0);
+      background-size: 200% 100%;
+      animation: busy-sheen 2.4s linear infinite;
+    }
+
+    @keyframes busy-sheen {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+
+    .run-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      min-height: 220px;
+      padding: 28px 18px;
+      text-align: center;
+      border: 0;
+      background:
+        radial-gradient(420px 160px at 50% 30%, rgba(31, 75, 153, 0.06), transparent 70%),
+        linear-gradient(180deg, #fbfaf8, #f6f5f1);
+    }
+
+    .run-loading.tall { min-height: 300px; }
+    .run-loading.short { min-height: 180px; }
+
+    .run-loading-spinner {
+      position: relative;
+      width: 44px;
+      height: 44px;
+    }
+
+    .run-loading-spinner::before,
+    .run-loading-spinner::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2.5px solid transparent;
+    }
+
+    .run-loading-spinner::before {
+      border-top-color: var(--accent);
+      border-right-color: rgba(31, 75, 153, 0.25);
+      animation: spin 0.85s linear infinite;
+    }
+
+    .run-loading-spinner::after {
+      inset: 7px;
+      border-bottom-color: #c9a227;
+      border-left-color: rgba(201, 162, 39, 0.2);
+      animation: spin 1.25s linear infinite reverse;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .run-loading-dots {
+      display: inline-flex;
+      gap: 5px;
+      align-items: center;
+      height: 10px;
+    }
+
+    .run-loading-dots span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.35;
+      animation: dot-bounce 1.1s ease-in-out infinite;
+    }
+
+    .run-loading-dots span:nth-child(2) { animation-delay: 0.15s; }
+    .run-loading-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes dot-bounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+      40% { transform: translateY(-4px); opacity: 1; }
+    }
+
+    .run-loading-title {
+      font-weight: 650;
+      font-size: 0.95rem;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    .run-loading-meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.45;
+      max-width: 36ch;
+    }
+
+    .test-batch.is-busy {
+      border-color: #e5d3a6;
+      background: linear-gradient(180deg, #fffdf8, #fbfaf8);
+    }
+
+    .test-batch.is-busy .test-batch-title::after {
+      content: "";
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      margin-left: 8px;
+      vertical-align: middle;
+      border-radius: 50%;
+      background: var(--warn);
+      box-shadow: 0 0 0 0 rgba(161, 92, 7, 0.45);
+      animation: badge-pulse 1.3s ease-out infinite;
+    }
+
+    .video-frame-wrap {
+      background: #14151a;
+      border-bottom: 1px solid var(--line);
+      min-height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-frame-wrap video {
+      display: block;
+      width: 100%;
+      max-height: 380px;
+      background: #000;
+    }
+
+    .audio-frame-wrap {
+      background:
+        radial-gradient(600px 180px at 20% 0%, rgba(31, 75, 153, 0.14), transparent 60%),
+        #14151a;
+      border-bottom: 1px solid var(--line);
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+      gap: 14px;
+      padding: 28px 22px;
+    }
+
+    .audio-frame-wrap .audio-label {
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 0.86rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      text-align: center;
+    }
+
+    .audio-frame-wrap audio {
+      width: 100%;
+      height: 44px;
+    }
+
+    .image-frame-wrap {
+      background:
+        linear-gradient(45deg, #eee 25%, transparent 25%),
+        linear-gradient(-45deg, #eee 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #eee 75%),
+        linear-gradient(-45deg, transparent 75%, #eee 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+      background-color: #f7f6f3;
+      border-bottom: 1px solid var(--line);
+      min-height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .image-frame-wrap img {
+      display: block;
+      width: 100%;
+      max-width: 400px;
+      aspect-ratio: 1 / 1;
+      object-fit: contain;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .draw-frame-wrap {
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      aspect-ratio: 1 / 1;
+      max-height: 420px;
+      position: relative;
+    }
+
+    .draw-frame-wrap iframe {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #fff;
+    }
+
+    .ink-frame-wrap {
+      background:
+        radial-gradient(circle at 20% 10%, #fffdf8 0%, #f6f0e4 70%);
+      border-bottom: 1px solid var(--line);
+      aspect-ratio: 1 / 1;
+      max-height: 420px;
+      position: relative;
+    }
+
+    .ink-frame-wrap canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .draw-live {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(20, 21, 26, 0.78);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      pointer-events: none;
+    }
+
+    .draw-live[hidden] { display: none; }
+
+    .draw-wait {
+      padding: 22px 18px !important;
+    }
+
+    .draw-wait-line {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .draw-wait-meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .think-preview {
+      margin: 8px 0 0;
+      width: min(100%, 420px);
+      max-height: 160px;
+      overflow: auto;
+      text-align: left;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: #4a4e57;
+      background: #fbfaf8;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    .draw-live .pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #7ee0c5;
+      box-shadow: 0 0 0 0 rgba(126, 224, 197, 0.7);
+      animation: pulse 1.4s ease-out infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(126, 224, 197, 0.55); }
+      70% { box-shadow: 0 0 0 8px rgba(126, 224, 197, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(126, 224, 197, 0); }
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: 4px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfaf8;
+    }
+
+    .view-toggle button {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 6px 11px;
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 550;
+      cursor: pointer;
+    }
+
+    .view-toggle button.active {
+      color: var(--accent);
+      background: var(--accent-soft);
+      border-color: #c9d7ef;
+    }
+
+    .preview-frame-wrap {
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      min-height: 360px;
+    }
+
+    .preview-frame-wrap iframe {
+      display: block;
+      width: 100%;
+      height: 380px;
+      border: 0;
+      background: #fff;
+    }
+
+    .preview-frame-wrap.game-preview {
+      position: relative;
+      min-height: 420px;
+    }
+
+    .preview-frame-wrap.game-preview iframe {
+      height: 420px;
+      background: #0f121c;
+    }
+
+    .game-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfaf8;
+    }
+
+    .game-controls .game-status {
+      margin-left: auto;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 550;
+    }
+
+    .source-view {
+      display: none;
+      margin: 0;
+      padding: 14px 16px;
+      max-height: 380px;
+      overflow: auto;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #14151a;
+      color: #e7e9ee;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      font-family: var(--mono);
+    }
+
+    .result-card.show-source .source-view { display: block; }
+    .result-card.show-source .preview-frame-wrap,
+    .result-card.show-source .video-frame-wrap,
+    .result-card.show-source .audio-frame-wrap,
+    .result-card.show-source .image-frame-wrap,
+    .result-card.show-source .draw-frame-wrap,
+    .result-card.show-source .ink-frame-wrap,
+    .result-card.show-source .media-empty,
+    .result-card.show-source > pre.out {
+      display: none !important;
+    }
+
+    .result-foot {
+      padding: 14px 16px;
+      background: #fff;
+      margin-top: auto;
+    }
+
+    .result-meta {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 11px;
+      line-height: 1.45;
+    }
+
+    .score {
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: var(--mono);
+    }
+
+    .error-line {
+      color: var(--bad);
+      font-size: 0.82rem;
+      padding: 11px 16px;
+      background: var(--bad-soft);
+      border-bottom: 1px solid #f0c4c6;
+      line-height: 1.45;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 13px 10px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted-2);
+      font-weight: 600;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    tbody tr:hover td {
+      background: #fbfaf8;
+    }
+
+    .rank {
+      display: inline-flex;
+      width: 28px;
+      height: 28px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.78rem;
+    }
+
+    .rank.gold {
+      background: #fff1cf;
+      color: #8a5a08;
+    }
+
+    .lb-group { margin-bottom: 28px; }
+    .lb-group:last-child { margin-bottom: 0; }
+    .lb-group h3 {
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+      text-transform: none;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .tiny { font-size: 0.8rem; color: var(--muted); }
+
+    code {
+      font-family: var(--mono);
+      font-size: 0.84em;
+      background: #f1f0eb;
+      padding: 1px 6px;
+      border-radius: 5px;
+      color: #2c3038;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: #14151a;
+      color: #f7f6f3;
+      border-radius: 12px;
+      padding: 12px 16px;
+      max-width: min(400px, calc(100vw - 32px));
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+      display: none;
+      z-index: 50;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .toast.show { display: block; animation: toast-in 160ms ease; }
+    .toast.error { background: #8f2226; }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .banner {
+      margin-bottom: 18px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #f0d6a4;
+      background: var(--warn-soft);
+      color: #7a4a08;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .banner a, .banner button.linkish {
+      color: var(--accent);
+      background: none;
+      border: none;
+      padding: 0;
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .settings-grid {
+      display: grid;
+      gap: 14px;
+      max-width: 560px;
+    }
+
+    .key-status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .key-status code {
+      font-size: 0.9rem;
+    }
+
+    pre.out {
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #fbfaf8;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      max-height: 360px;
+      overflow: auto;
+      font-size: 0.86rem;
+      line-height: 1.55;
+      margin: 0;
+      font-family: var(--font);
+      color: #2c3038;
+    }
+
+    .skill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .skill-row .skill-select-wrap {
+      flex: 1 1 220px;
+      min-width: 0;
+    }
+
+    .panel-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px 16px;
+      margin-bottom: 18px;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+    }
+
+    .panel-head .lede {
+      margin: 4px 0 0;
+    }
+
+    .test-batch {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfaf8;
+      padding: 14px 14px 16px;
+      margin-bottom: 16px;
+    }
+
+    .test-batch:last-child {
+      margin-bottom: 0;
+    }
+
+    .test-batch-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px 14px;
+      margin-bottom: 12px;
+    }
+
+    .test-batch-title {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+    }
+
+    .test-batch-meta {
+      margin-top: 4px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .test-batch-prompt {
+      margin-top: 6px;
+      font-size: 0.86rem;
+      color: #3d414a;
+      line-height: 1.45;
+      max-width: 70ch;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .test-batch-prompt-wrap {
+      margin-top: 6px;
+      max-width: 70ch;
+    }
+
+    .prompt-more-btn {
+      margin-top: 4px;
+      border: 0;
+      background: none;
+      padding: 0;
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      cursor: pointer;
+    }
+
+    .prompt-more-btn:hover {
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .test-batch .results-grid {
+      margin-top: 4px;
+    }
+
+    .new-models-day {
+      margin-bottom: 22px;
+    }
+
+    .new-models-day:last-child {
+      margin-bottom: 0;
+    }
+
+    .new-models-day h3 {
+      margin: 0 0 10px;
+      font-size: 0.95rem;
+      text-transform: none;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .new-models-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .new-model-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: #fff;
+    }
+
+    .new-model-row .name {
+      font-weight: 600;
+      font-size: 0.94rem;
+      letter-spacing: -0.02em;
+    }
+
+    .new-model-row .provider {
+      display: block;
+      margin-top: 2px;
+      font-size: 0.8rem;
+      color: var(--muted-2);
+      font-weight: 500;
+    }
+
+    .new-model-row .meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+      line-height: 1.35;
+    }
+
+    .new-models-empty-day {
+      padding: 14px 16px;
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius-sm);
+      color: var(--muted);
+      font-size: 0.88rem;
+      background: #fbfaf8;
+    }
+
+    .modal-card.wide {
+      width: min(720px, 100%);
+    }
+
+    .modal-card .section {
+      margin-top: 16px;
+      padding-top: 14px;
+    }
+
+    .modal-card .section:first-child {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      background: rgba(20, 21, 26, 0.55);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    #skill-modal {
+      z-index: 50;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(560px, 100%);
+      max-height: min(88vh, 720px);
+      overflow: auto;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 2px);
+      box-shadow: 0 16px 48px rgba(20, 21, 26, 0.22);
+      padding: 22px 22px 18px;
+    }
+
+    .modal-card h2 {
+      margin: 0 0 4px;
+      font-size: 1.12rem;
+    }
+
+    .modal-card .modal-lede {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 14px;
+    }
+
+    .modal-actions .spacer {
+      flex: 1 1 auto;
+    }
+
+    @media (max-width: 700px) {
+      .wrap { width: calc(100% - 24px); padding-top: 20px; }
+      .panel { padding: 18px; }
+      nav.tabs button { padding: 9px 11px; font-size: 0.84rem; }
+      .results-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="app">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">BM</div>
+        <div>
+          <h1>Bench Marker</h1>
+        </div>
+      </div>
+      <div class="status-pill" id="health-pill" title="Open settings">
+        <span class="dot" id="health-dot"></span>
+        <span id="health-text">checking…</span>
+      </div>
+    </header>
+
+    <nav class="tabs" id="tabs" aria-label="Benchmarks"></nav>
+    <div id="main"></div>
+  </div>
+
+  <div class="modal-backdrop" id="skill-modal" role="dialog" aria-modal="true" aria-labelledby="skill-modal-title" hidden>
+    <div class="modal-card">
+      <h2 id="skill-modal-title">Manage skills</h2>
+      <p class="modal-lede">Skills are system prompts reused across text runs. Add, edit, or delete them here.</p>
+      <div class="field">
+        <label for="skill-edit-select">Skill</label>
+        <select id="skill-edit-select"></select>
+      </div>
+      <div class="field">
+        <label for="skill-edit-name">Name</label>
+        <input id="skill-edit-name" type="text" placeholder="e.g. Short-form script writing" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="skill-edit-body">Instruction text (system prompt)</label>
+        <textarea id="skill-edit-body" style="min-height:180px" placeholder="You are a … Rules: …"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn primary small" id="skill-save">Save</button>
+        <button type="button" class="btn small danger" id="skill-delete" disabled>Delete</button>
+        <span class="tiny" id="skill-modal-status"></span>
+        <span class="spacer"></span>
+        <button type="button" class="btn small" id="skill-modal-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="create-test-modal" role="dialog" aria-modal="true" aria-labelledby="create-test-title" hidden>
+    <div class="modal-card wide">
+      <h2 id="create-test-title">Create test</h2>
+      <p class="modal-lede" id="create-test-lede">Choose models and enter a prompt. Each model runs in parallel as one test.</p>
+      <div id="create-test-body"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn primary" id="create-test-submit">Create test</button>
+        <span class="tiny" id="create-test-status"></span>
+        <span class="spacer"></span>
+        <button type="button" class="btn small" id="create-test-close">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="add-model-modal" role="dialog" aria-modal="true" aria-labelledby="add-model-title" hidden>
+    <div class="modal-card wide">
+      <h2 id="add-model-title">Add model to test</h2>
+      <p class="modal-lede">Uses the same prompt as this test. Pick one or more models to run and append to the group.</p>
+      <div id="add-model-body"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn primary" id="add-model-submit">Add model</button>
+        <span class="tiny" id="add-model-status"></span>
+        <span class="spacer"></span>
+        <button type="button" class="btn small" id="add-model-close">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const state = {
+      tasks: [],
+      models: [], // local saved models (legacy)
+      openrouterModels: [], // full catalogue from OpenRouter
+      openrouterModelsError: "",
+      openrouterModelsLoading: false,
+      openrouterModelsPromise: null, // shared in-flight load
+      selectedOpenrouterIds: [], // models chosen for the next run
+      modelFilter: "",
+      modelHighlight: 0, // keyboard highlight index in search results
+      runs: [],
+      leaderboard: [],
+      activeTab: "leaderboard",
+      pollTimer: null,
+      pollMs: 0,
+      replayTimers: {},
+      inkPlayers: {},
+      draftPrompts: {}, // taskId -> brief text
+      draftGames: {}, // taskId -> game name for game maker
+      instructions: [], // saved skills
+      createTestTaskId: null, // task id currently open in create-test modal
+      addModelContext: null, // { taskId, batchKey, sourceRunId, batchId }
+      newModelsLoading: false,
+      newModelsError: "",
+      newModelsFetchedAt: 0,
+      // skill selected for text runs (id of a saved instruction)
+      selectedInstructionId: null, // number | null
+      instructionNameDraft: "",
+      instructionBodyDraft: "",
+      // skill currently open in the manage-skills modal
+      skillEditorId: null, // number | "new" | null
+      settings: {
+        openrouter_configured: false,
+        openrouter_key_source: "none",
+        openrouter_key_masked: "",
+        cost_limit_usd: null,
+      },
+    };
+
+    // App is mounted under /bench-marker/ on hermes; absolute /api/* hits the wrong host path.
+    const API_BASE = (() => {
+      const path = window.location.pathname || "/";
+      if (path === "/bench-marker" || path.startsWith("/bench-marker/")) {
+        return "/bench-marker";
+      }
+      return "";
+    })();
+
+    function url(path) {
+      if (!path.startsWith("/")) path = "/" + path;
+      return API_BASE + path;
+    }
+
+    const $ = (id) => document.getElementById(id);
+
+    function toast(msg, isError = false) {
+      const el = $("toast");
+      el.textContent = msg;
+      el.className = "toast show" + (isError ? " error" : "");
+      clearTimeout(el._t);
+      el._t = setTimeout(() => el.classList.remove("show"), 3200);
+    }
+
+    async function api(path, opts = {}) {
+      const res = await fetch(url(path), {
+        headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
+        ...opts,
+      });
+      let data = null;
+      try { data = await res.json(); } catch { data = {}; }
+      if (!res.ok) throw new Error(data.error || res.statusText || "Request failed");
+      return data;
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function escapeAttr(s) {
+      return escapeHtml(s).replace(/'/g, "&#39;");
+    }
+
+    function renderTabs() {
+      const items = [
+        { key: "leaderboard", label: "Leaderboard" },
+        { key: "new-models", label: "New models" },
+        ...state.tasks.map((t) => ({ key: String(t.id), label: t.name })),
+        { key: "settings", label: "Settings" },
+      ];
+      $("tabs").innerHTML = items.map((item) => `
+        <button type="button"
+          data-tab="${escapeAttr(item.key)}"
+          class="${String(state.activeTab) === item.key ? "active" : ""}">
+          ${escapeHtml(item.label)}
+        </button>
+      `).join("");
+    }
+
+    function goTab(key) {
+      if (key === "leaderboard" || key === "settings" || key === "new-models") {
+        state.activeTab = key;
+      } else {
+        state.activeTab = Number(key);
+      }
+      renderTabs();
+      renderMain();
+      if (state.activeTab === "leaderboard") {
+        loadLeaderboard().catch((err) => toast(err.message, true));
+      } else if (state.activeTab === "settings") {
+        loadSettings().catch((err) => toast(err.message, true));
+      } else if (state.activeTab === "new-models") {
+        loadNewModelsPage().catch((err) => toast(err.message, true));
+      } else {
+        loadRunsForActive().catch((err) => toast(err.message, true));
+      }
+    }
+
+    $("tabs").addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-tab]");
+      if (!btn) return;
+      goTab(btn.dataset.tab);
+    });
+
+    $("health-pill").addEventListener("click", () => goTab("settings"));
+
+    function renderLeaderboard() {
+      if (!state.leaderboard.length) {
+        return `
+          <div class="panel">
+            <h2>Leaderboard</h2>
+            <p class="lede">Scores across every benchmark. Rankings appear after you run models and score their outputs.</p>
+            <div class="empty">
+              <strong>No scores yet</strong>
+              Open a benchmark tab, run a few models, then give each result a score from 0–10.
+            </div>
+          </div>
+        `;
+      }
+
+      const byTask = {};
+      for (const row of state.leaderboard) {
+        (byTask[row.task_id] ||= { name: row.task_name, rows: [] }).rows.push(row);
+      }
+
+      const groups = Object.values(byTask).map((group) => {
+        const ranked = [...group.rows].sort((a, b) => {
+          const as = a.avg_score == null ? -1 : a.avg_score;
+          const bs = b.avg_score == null ? -1 : b.avg_score;
+          return bs - as;
+        });
+        return `
+          <div class="lb-group">
+            <h3>${escapeHtml(group.name)}</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Model</th>
+                  <th>Avg score</th>
+                  <th>Best</th>
+                  <th>Scored</th>
+                  <th>Runs</th>
+                  <th>Avg latency</th>
+                  <th>Avg cost</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${ranked.map((r, i) => `
+                  <tr>
+                    <td><span class="rank ${i === 0 && r.avg_score != null ? "gold" : ""}">${i + 1}</span></td>
+                    <td>
+                      ${(() => {
+                        const labels = formatModelPresentation(r.model_openrouter_id, r.model_display_name);
+                        return `
+                          <div>${escapeHtml(labels.title)}</div>
+                          <div class="tiny">${escapeHtml(labels.provider)}</div>
+                        `;
+                      })()}
+                    </td>
+                    <td class="score">${r.avg_score != null ? Number(r.avg_score).toFixed(2) : "—"}</td>
+                    <td>${r.best_score != null ? Number(r.best_score).toFixed(1) : "—"}</td>
+                    <td>${r.scored_count || 0}</td>
+                    <td>${r.run_count} <span class="tiny">(${r.completed_count || 0} ok)</span></td>
+                    <td>${r.avg_latency_ms != null ? Math.round(r.avg_latency_ms) + " ms" : "—"}</td>
+                    <td>${formatRunCost(r.avg_cost_usd) || "—"}
+                      ${r.total_cost_usd != null ? `<div class="tiny">total ${formatRunCost(r.total_cost_usd)}</div>` : ""}
+                    </td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }).join("");
+
+      return `
+        <div class="panel">
+          <h2>Leaderboard</h2>
+          <p class="lede">Models ranked by the scores you assign on each benchmark.</p>
+          ${groups}
+        </div>
+      `;
+    }
+
+    function renderSettings() {
+      const s = state.settings || {};
+      const configured = !!s.openrouter_configured;
+      const sourceLabel = {
+        ui: "saved in this tool",
+        env: "from server environment",
+        none: "not set",
+      }[s.openrouter_key_source] || s.openrouter_key_source || "unknown";
+      const masked = s.openrouter_key_masked || "";
+
+      return `
+        <div class="panel">
+          <h2>Settings</h2>
+          <p class="lede">Configure OpenRouter here so you can run benchmarks without editing server files.</p>
+
+          <div class="settings-grid">
+            <div>
+              <h3>OpenRouter API key</h3>
+
+              <div class="scoring-box" style="margin-bottom:14px">
+                <div class="row" style="justify-content:space-between;margin-bottom:6px">
+                  <strong>Currently saved key</strong>
+                  <span class="badge ${configured ? "completed" : "failed"}">
+                    ${configured ? "Configured" : "Missing"}
+                  </span>
+                </div>
+                ${configured
+                  ? `<div style="font-size:1.05rem;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:0.02em">
+                       ${escapeHtml(masked || "(key present, mask unavailable)")}
+                     </div>
+                     <div class="tiny" style="margin-top:6px">
+                       Source: ${escapeHtml(sourceLabel)}.
+                       The full key is hidden on purpose after save — only this mask is shown.
+                     </div>`
+                  : `<div class="tiny">No key saved yet. Paste one below and click Save key.</div>`
+                }
+              </div>
+
+              <label for="or-key">Paste a new API key</label>
+              <input id="or-key" type="password" autocomplete="off" spellcheck="false"
+                placeholder="sk-or-v1-…" />
+              <p class="hint">
+                Get a key from
+                <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a>
+                (must be a full key starting with <code>sk-or-v1-</code>).
+                After save, the box clears and the masked key appears above — that means it worked.
+              </p>
+              <div class="row" style="margin-top:12px">
+                <button type="button" class="btn primary" id="save-or-key">Save key</button>
+                <button type="button" class="btn" id="test-or-key">Test connection</button>
+                <button type="button" class="btn" id="clear-or-key">Clear saved key</button>
+              </div>
+              <p class="tiny" id="settings-status" style="margin-top:10px;min-height:1.2em"></p>
+            </div>
+
+            <div>
+              <h3>Cost cap</h3>
+              <p class="tiny" style="margin:0 0 10px">
+                While a model is streaming, we estimate spend from tokens as they arrive
+                and cancel the call if it crosses this amount. Blank or 0 means no cap.
+              </p>
+              <label for="cost-limit">Stop a run if estimated cost exceeds ($)</label>
+              <input id="cost-limit" type="number" min="0" step="0.001"
+                placeholder="e.g. 0.05"
+                value="${s.cost_limit_usd != null && s.cost_limit_usd !== "" ? escapeAttr(s.cost_limit_usd) : ""}" />
+              <p class="hint">
+                Streaming benches (SVG draw, pen sketch) can stop mid-call.
+                Other benches still run to completion, then record the real bill.
+              </p>
+              <div class="row" style="margin-top:12px">
+                <button type="button" class="btn primary" id="save-cost-limit">Save cost cap</button>
+              </div>
+              <p class="tiny" id="cost-limit-status" style="margin-top:10px;min-height:1.2em">
+                ${s.cost_limit_usd
+                  ? `Current cap: $${Number(s.cost_limit_usd).toFixed(4)}`
+                  : "No cap set."}
+              </p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function formatUsdPerM(value) {
+      if (value == null || Number.isNaN(Number(value))) return "—";
+      const n = Number(value);
+      if (n === 0) return "$0";
+      if (n < 0.01) return "$" + n.toFixed(4);
+      if (n < 1) return "$" + n.toFixed(3);
+      if (n < 100) return "$" + n.toFixed(2);
+      return "$" + n.toFixed(0);
+    }
+
+    function formatRunCost(value) {
+      if (value == null || value === "" || Number.isNaN(Number(value))) return null;
+      const n = Number(value);
+      if (n === 0) return "$0.00";
+      if (n < 0.0001) return "$" + n.toFixed(6);
+      if (n < 0.01) return "$" + n.toFixed(4);
+      if (n < 1) return "$" + n.toFixed(4);
+      return "$" + n.toFixed(3);
+    }
+
+    function formatLatencySeconds(ms) {
+      if (ms == null || ms === "" || Number.isNaN(Number(ms))) return null;
+      const sec = Number(ms) / 1000;
+      if (sec < 10) return `${sec.toFixed(1)}s`;
+      return `${Math.round(sec)}s`;
+    }
+
+    function modelPriceLabel(m) {
+      if (!m) return "—";
+      const pin = m.pricing?.prompt_per_million;
+      const pout = m.pricing?.completion_per_million;
+      if (m.is_free || (pin === 0 && pout === 0)) return "Free";
+      return `${formatUsdPerM(pin)} / ${formatUsdPerM(pout)} per 1M tok`;
+    }
+
+    function findOrModel(id) {
+      return state.openrouterModels.find((m) => m.id === id);
+    }
+
+    function filteredOpenrouterModels() {
+      const q = (state.modelFilter || "").trim().toLowerCase();
+      const selected = new Set(state.selectedOpenrouterIds);
+      let list = state.openrouterModels.filter((m) => !selected.has(m.id));
+      if (!q) return list;
+      const tokens = q.split(/\s+/).filter(Boolean);
+      return list.filter((m) => {
+        const hay = `${m.id || ""} ${m.name || ""}`.toLowerCase();
+        return tokens.every((t) => hay.includes(t));
+      });
+    }
+
+    function addSelectedModel(id) {
+      if (!id) return;
+      if (state.selectedOpenrouterIds.includes(id)) {
+        toast("Already selected", true);
+        return;
+      }
+      state.selectedOpenrouterIds.push(id);
+      state.modelHighlight = 0;
+      // Clear search for quicker multi-add of different names
+      state.modelFilter = "";
+      refreshModelPickerDom({ focusSearch: true });
+    }
+
+    function renderSelectedModels() {
+      if (!state.selectedOpenrouterIds.length) {
+        return "";
+      }
+      return `
+        <div class="selected-models">
+          ${state.selectedOpenrouterIds.map((id) => {
+            const m = findOrModel(id) || { id, name: id, pricing: {} };
+            const pin = m.pricing?.prompt_per_million;
+            const pout = m.pricing?.completion_per_million;
+            const free = m.is_free || (pin === 0 && pout === 0);
+            return `
+              <div class="selected-model" data-id="${escapeAttr(id)}">
+                <div class="left">
+                  <div class="name">${escapeHtml(m.name || id)}</div>
+                  <div class="meta">
+                    <span class="model-id" style="margin:0">${escapeHtml(id)}</span>
+                    ${free
+                      ? `<span class="price free">Free</span>`
+                      : `
+                        <span class="cost-chip">In <strong>${formatUsdPerM(pin)}</strong>/1M</span>
+                        <span class="cost-chip">Out <strong>${formatUsdPerM(pout)}</strong>/1M</span>
+                      `
+                    }
+                    ${m.context_length ? `<span class="tiny">${Number(m.context_length).toLocaleString()} ctx</span>` : ""}
+                  </div>
+                </div>
+                <button type="button" class="btn small remove-model" data-id="${escapeAttr(id)}">Remove</button>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function renderSearchResultsHtml() {
+      const q = (state.modelFilter || "").trim();
+      // Keep the full catalogue hidden until the user searches.
+      if (!q) {
+        return `
+          <div class="model-results-empty" style="border:1px dashed var(--line-strong);border-radius:12px;margin-top:10px">
+            Type a name to search — e.g. claude, gpt, gemini — then click a result to add it.
+          </div>
+        `;
+      }
+
+      const available = filteredOpenrouterModels();
+      const total = available.length;
+      const shown = available.slice(0, 80);
+      if (!shown.length) {
+        return `
+          <div class="model-results">
+            <div class="model-results-empty">
+              No models match “${escapeHtml(q)}”.
+            </div>
+          </div>
+        `;
+      }
+
+      const hi = Math.max(0, Math.min(state.modelHighlight || 0, shown.length - 1));
+      state.modelHighlight = hi;
+
+      const rows = shown.map((m, i) => {
+        const pin = m.pricing?.prompt_per_million;
+        const pout = m.pricing?.completion_per_million;
+        const free = m.is_free || (pin === 0 && pout === 0);
+        const priceHtml = free
+          ? `<span class="free-tag">Free</span>`
+          : `In ${formatUsdPerM(pin)}/1M<br>Out ${formatUsdPerM(pout)}/1M`;
+        return `
+          <button type="button" class="model-result ${i === hi ? "active" : ""}"
+            data-id="${escapeAttr(m.id)}" data-index="${i}">
+            <span>
+              <span class="r-name">${escapeHtml(m.name || m.id)}</span>
+              <span class="r-id">${escapeHtml(m.id)}</span>
+            </span>
+            <span class="r-price">${priceHtml}</span>
+          </button>
+        `;
+      }).join("");
+
+      return `
+        <div class="model-results" id="model-results" role="listbox">
+          ${rows}
+        </div>
+        <div class="model-results-count">
+          ${shown.length}${total > shown.length ? ` of ${total}` : ""} match${total === 1 ? "" : "es"}
+          · click or Enter to add
+        </div>
+      `;
+    }
+
+    function renderModelPicker() {
+      if (state.openrouterModelsLoading && !state.openrouterModels.length) {
+        return `<div class="tiny">Loading OpenRouter models…</div>`;
+      }
+      if (state.openrouterModelsError && !state.openrouterModels.length) {
+        return `
+          <div class="banner">
+            Could not load models: ${escapeHtml(state.openrouterModelsError)}
+            <button type="button" class="linkish" id="reload-models">Retry</button>
+          </div>
+        `;
+      }
+
+      const selectedCount = state.selectedOpenrouterIds.length;
+      return `
+        <div class="model-search-wrap">
+          <input id="model-search" type="search" autocomplete="off" spellcheck="false"
+            placeholder="Search models to add…"
+            value="${escapeAttr(state.modelFilter)}"
+            aria-label="Search models" />
+          <div id="model-results-wrap">
+            ${renderSearchResultsHtml()}
+          </div>
+        </div>
+        <div id="selected-models-wrap">
+          ${selectedCount ? `<div class="tiny" style="margin:12px 0 6px">${selectedCount} selected</div>` : ""}
+          ${renderSelectedModels()}
+        </div>
+      `;
+    }
+
+    function isPromptKind(kind) {
+      return kind === "html" || kind === "remotion" || kind === "text" || kind === "image"
+        || kind === "draw" || kind === "pen" || kind === "strudel" || kind === "game";
+    }
+
+    function kindCopy(kind) {
+      if (kind === "game") {
+        return {
+          briefLabel: "Extra instructions (optional)",
+          briefPlaceholder:
+            "e.g. Soft pastel theme, start with 3 lives, show high score, mobile-friendly touch controls…",
+          briefHint:
+            "Models build a full playable HTML game. Pick Tetris, Pac-Man, or Flappy Bird, then optionally add style or rule tweaks.",
+          runButton: "Create test",
+          emptyResults: "Create a test to generate playable games and compare models.",
+          waiting: "Waiting for game HTML…",
+          sourceLabel: "Source",
+        };
+      }
+      if (kind === "remotion") {
+        return {
+          briefLabel: "Describe the motion graphic you want each model to create",
+          briefPlaceholder:
+            "e.g. A 4-second logo reveal for Applied AI: dark navy background, wordmark fades up with a soft spring, accent underline draws left-to-right, then a small subtitle “Bench Marker” slides in.",
+          briefHint:
+            "Models write Remotion (React) code. This server renders each composition to MP4 (960×540, ~3–5s). Renders run one at a time.",
+          runButton: "Generate motion graphics with selected models",
+          emptyResults: "Create a test to generate motion graphics and compare models.",
+          waiting: "Waiting for model + Remotion render…",
+          sourceLabel: "Code",
+        };
+      }
+      if (kind === "strudel") {
+        return {
+          briefLabel: "Describe the song you want each model to write",
+          briefPlaceholder:
+            "e.g. A moody lo-fi hip-hop loop in A minor: dusty boom-bap drums, warm detuned saw bass, simple electric-piano chords, gentle swing, chill late-night study vibe.",
+          briefHint:
+            "Models write Strudel live-coding music. This server offline-renders each piece to MP3 (~16s). You only need to score the audio — code is available under the Code tab.",
+          runButton: "Generate songs with selected models",
+          emptyResults: "Create a test to generate songs and compare models.",
+          waiting: "Waiting for model + Strudel → MP3 render…",
+          sourceLabel: "Code",
+        };
+      }
+      if (kind === "image") {
+        return {
+          briefLabel: "Describe the square graphic",
+          briefPlaceholder:
+            "e.g. Instagram quote card: dark navy background, large white quote “Ship before you’re ready”, small attribution “— Applied AI”, subtle geometric accent shapes, modern and minimal.",
+          briefHint:
+            "Models generate HTML for a 1080×1080 canvas. We screenshot it to a PNG automatically. Just describe the graphic — no need to mention HTML.",
+          runButton: "Generate square images with selected models",
+          emptyResults: "Create a test to generate square graphics and compare models.",
+          waiting: "Waiting for model + image render…",
+          sourceLabel: "HTML",
+        };
+      }
+      if (kind === "text") {
+        return {
+          briefLabel: "User prompt",
+          briefPlaceholder:
+            "e.g. Rewrite this rough idea into a spoken script about why local AI models are getting good enough for everyday founder workflows…",
+          briefHint:
+            "The instruction/skill is sent as the system message; this prompt is the user message. Both are snapshotted on each run.",
+          runButton: "Run text benchmark with selected models",
+          emptyResults: "Create a test with a skill, prompt, and models to compare outputs.",
+          waiting: "Waiting for model…",
+          sourceLabel: "Output",
+        };
+      }
+      if (kind === "draw") {
+        return {
+          briefLabel: "What should each model draw?",
+          briefPlaceholder:
+            "e.g. A pelican riding a bicycle along a coastal path, late afternoon light, simple and bold.",
+          briefHint:
+            "Models stream SVG only. Complete shapes appear on the canvas as tokens arrive — no image models, no HTML page.",
+          runButton: "Draw with selected models",
+          emptyResults: "Create a test to draw subjects and compare models.",
+          waiting: "Waiting for the first shapes…",
+          sourceLabel: "SVG",
+        };
+      }
+      if (kind === "pen") {
+        return {
+          briefLabel: "What should each model sketch with a pen?",
+          briefPlaceholder:
+            "e.g. A cat sitting on a windowsill, simple line drawing, one continuous-looking sketch.",
+          briefHint:
+            "Models stream pen coordinates (down / move / up) on a 1024×1024 page. The line travels like a hand drawing — not an SVG dump.",
+          runButton: "Sketch with selected models",
+          emptyResults: "Create a test to sketch subjects and compare models.",
+          waiting: "Waiting for the first stroke…",
+          sourceLabel: "Pen log",
+        };
+      }
+      return {
+        briefLabel: "Describe the page you want each model to build",
+        briefPlaceholder:
+          "e.g. A clean landing page for a personal AI consulting brand called Applied AI. Hero with headline, short subcopy, email capture, 3 feature cards, and a dark footer. Modern, light theme, Inter-like fonts.",
+        briefHint:
+          "We automatically append output rules so every model returns a full HTML document (no markdown fences). Results are cleaned and rendered in a sandboxed preview.",
+        runButton: "Generate HTML with selected models",
+        emptyResults: "Create a test to generate pages and compare models.",
+        waiting: "Waiting for HTML…",
+        sourceLabel: "Source",
+      };
+    }
+
+    function skillSelectOptionsHtml(selectedId) {
+      return state.instructions.map((i) =>
+        `<option value="${i.id}" ${String(selectedId) === String(i.id) ? "selected" : ""}>${escapeHtml(i.name)}</option>`
+      ).join("");
+    }
+
+    function renderInstructionSection() {
+      const opts = skillSelectOptionsHtml(state.selectedInstructionId);
+      return `
+        <div class="section" style="margin-top:0;padding-top:0;border:0">
+          <div class="skill-row">
+            <div class="skill-select-wrap">
+              <label for="instruction-select">Skill</label>
+              <select id="instruction-select">
+                <option value="">— Select a skill —</option>
+                ${opts}
+              </select>
+            </div>
+            <button type="button" class="btn small" id="manage-skills">Manage skills</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function applySelectedInstruction(id) {
+      if (id == null || id === "" || id === "new") {
+        state.selectedInstructionId = null;
+        state.instructionNameDraft = "";
+        state.instructionBodyDraft = "";
+        return;
+      }
+      const inst = state.instructions.find((i) => String(i.id) === String(id));
+      if (!inst) {
+        state.selectedInstructionId = null;
+        state.instructionNameDraft = "";
+        state.instructionBodyDraft = "";
+        return;
+      }
+      state.selectedInstructionId = inst.id;
+      state.instructionNameDraft = inst.name || "";
+      state.instructionBodyDraft = inst.body || "";
+    }
+
+    function refreshMainSkillSelect() {
+      const select = $("instruction-select");
+      if (!select) return;
+      const cur = state.selectedInstructionId;
+      select.innerHTML =
+        `<option value="">— Select a skill —</option>` +
+        skillSelectOptionsHtml(cur);
+      if (cur != null && [...select.options].some((o) => o.value === String(cur))) {
+        select.value = String(cur);
+      } else {
+        select.value = "";
+        applySelectedInstruction(null);
+      }
+    }
+
+    function fillSkillModalFields() {
+      const nameEl = $("skill-edit-name");
+      const bodyEl = $("skill-edit-body");
+      const delBtn = $("skill-delete");
+      const editSelect = $("skill-edit-select");
+      if (!nameEl || !bodyEl) return;
+
+      if (state.skillEditorId === "new" || state.skillEditorId == null) {
+        nameEl.value = "";
+        bodyEl.value = "";
+        if (delBtn) delBtn.disabled = true;
+        if (editSelect) editSelect.value = "new";
+        return;
+      }
+
+      const inst = state.instructions.find((i) => String(i.id) === String(state.skillEditorId));
+      nameEl.value = inst?.name || "";
+      bodyEl.value = inst?.body || "";
+      if (delBtn) delBtn.disabled = !inst;
+      if (editSelect && inst) editSelect.value = String(inst.id);
+    }
+
+    function refreshSkillModalSelect() {
+      const editSelect = $("skill-edit-select");
+      if (!editSelect) return;
+      const cur = state.skillEditorId;
+      editSelect.innerHTML =
+        state.instructions.map((i) =>
+          `<option value="${i.id}" ${String(cur) === String(i.id) ? "selected" : ""}>${escapeHtml(i.name)}</option>`
+        ).join("") +
+        `<option value="new" ${cur === "new" || cur == null ? "selected" : ""}>+ New skill…</option>`;
+      if (cur === "new" || cur == null) editSelect.value = "new";
+      else if ([...editSelect.options].some((o) => o.value === String(cur))) editSelect.value = String(cur);
+      else editSelect.value = "new";
+    }
+
+    function openSkillModal(preferId) {
+      const modal = $("skill-modal");
+      if (!modal) return;
+      if (preferId != null && preferId !== "") {
+        state.skillEditorId = preferId;
+      } else if (
+        state.selectedInstructionId != null &&
+        state.instructions.some((i) => String(i.id) === String(state.selectedInstructionId))
+      ) {
+        state.skillEditorId = state.selectedInstructionId;
+      } else {
+        state.skillEditorId = "new";
+      }
+      refreshSkillModalSelect();
+      fillSkillModalFields();
+      const status = $("skill-modal-status");
+      if (status) status.textContent = "";
+      modal.hidden = false;
+      modal.classList.add("open");
+      const nameEl = $("skill-edit-name");
+      if (nameEl) setTimeout(() => nameEl.focus(), 0);
+    }
+
+    function closeSkillModal() {
+      const modal = $("skill-modal");
+      if (!modal) return;
+      modal.classList.remove("open");
+      modal.hidden = true;
+      state.skillEditorId = null;
+      const status = $("skill-modal-status");
+      if (status) status.textContent = "";
+    }
+
+    function bindSkillModalEvents() {
+      const modal = $("skill-modal");
+      if (!modal || modal.dataset.bound === "1") return;
+      modal.dataset.bound = "1";
+
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeSkillModal();
+      });
+
+      const closeBtn = $("skill-modal-close");
+      if (closeBtn) closeBtn.onclick = () => closeSkillModal();
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal.classList.contains("open")) {
+          e.preventDefault();
+          e.stopImmediatePropagation?.();
+          closeSkillModal();
+        }
+      });
+
+      const editSelect = $("skill-edit-select");
+      if (editSelect) {
+        editSelect.onchange = () => {
+          const val = editSelect.value;
+          state.skillEditorId = val === "new" ? "new" : Number(val);
+          fillSkillModalFields();
+          const status = $("skill-modal-status");
+          if (status) status.textContent = "";
+        };
+      }
+
+      const saveBtn = $("skill-save");
+      if (saveBtn) {
+        saveBtn.onclick = async () => {
+          const name = ($("skill-edit-name")?.value || "").trim();
+          const body = $("skill-edit-body")?.value || "";
+          const status = $("skill-modal-status");
+          if (!name) return toast("Give the skill a name", true);
+          if (!body.trim()) return toast("Instruction text cannot be empty", true);
+          try {
+            if (status) status.textContent = "Saving…";
+            let inst;
+            if (state.skillEditorId && state.skillEditorId !== "new") {
+              const data = await api(`/api/instructions/${state.skillEditorId}`, {
+                method: "PATCH",
+                body: JSON.stringify({ name, body }),
+              });
+              inst = data.instruction;
+            } else {
+              const data = await api("/api/instructions", {
+                method: "POST",
+                body: JSON.stringify({ name, body }),
+              });
+              inst = data.instruction;
+            }
+            await loadInstructions();
+            state.skillEditorId = inst.id;
+            // If nothing selected for runs, or we edited the active skill, keep selection in sync
+            if (
+              state.selectedInstructionId == null ||
+              String(state.selectedInstructionId) === String(inst.id)
+            ) {
+              applySelectedInstruction(inst.id);
+            }
+            refreshSkillModalSelect();
+            fillSkillModalFields();
+            refreshMainSkillSelect();
+            if (status) status.textContent = "Saved";
+            toast(`Saved skill: ${inst.name}`);
+          } catch (err) {
+            if (status) status.textContent = "";
+            toast(err.message, true);
+          }
+        };
+      }
+
+      const delBtn = $("skill-delete");
+      if (delBtn) {
+        delBtn.onclick = async () => {
+          if (!state.skillEditorId || state.skillEditorId === "new") return;
+          if (!confirm("Delete this saved skill?")) return;
+          const status = $("skill-modal-status");
+          try {
+            const deletedId = state.skillEditorId;
+            await api(`/api/instructions/${deletedId}`, { method: "DELETE" });
+            await loadInstructions();
+            if (String(state.selectedInstructionId) === String(deletedId)) {
+              applySelectedInstruction(state.instructions[0]?.id ?? null);
+            }
+            state.skillEditorId = state.instructions[0]?.id ?? "new";
+            refreshSkillModalSelect();
+            fillSkillModalFields();
+            refreshMainSkillSelect();
+            if (status) status.textContent = "Deleted";
+            toast("Skill deleted");
+          } catch (err) {
+            if (status) status.textContent = "";
+            toast(err.message, true);
+          }
+        };
+      }
+    }
+
+    function runBatchKey(r) {
+      if (r.batch_id) return String(r.batch_id);
+      // Legacy runs (pre-batch_id): group concurrent same-prompt creations
+      const t = String(r.created_at || "").slice(0, 19);
+      return `legacy:${t}|${r.user_prompt_snapshot || ""}|${r.system_prompt_snapshot || ""}`;
+    }
+
+    function extractBriefText(run) {
+      let t = (run.user_prompt_snapshot || "").trim();
+      if (!t) return "";
+      const patterns = [
+        /from this brief:\n\n([\s\S]*?)\n\n/,
+        /for this brief:\n\n([\s\S]*?)\n\n/,
+        /as HTML for this brief:\n\n([\s\S]*?)\n\n/,
+        /as a single square SVG illustration:\n\n([\s\S]*?)\n\n/,
+        /with a pen on paper:\n\n([\s\S]*?)\n\n/,
+        /Create the (.+?) game\.\s*([\s\S]*?)\nThe game must be immediately playable/,
+      ];
+      for (const re of patterns) {
+        const m = t.match(re);
+        if (!m) continue;
+        if (m[2] != null) {
+          const game = (m[1] || "").trim();
+          const brief = (m[2] || "").trim();
+          t = brief ? `${game}: ${brief}` : game;
+          break;
+        }
+        if (m[1] && m[1].trim()) {
+          t = m[1].trim();
+          break;
+        }
+      }
+      return t.replace(/\s+/g, " ").trim();
+    }
+
+    function extractBriefPreview(run) {
+      const full = extractBriefText(run);
+      if (!full) return { full: "", short: "", truncated: false };
+      if (full.length <= 140) return { full, short: full, truncated: false };
+      return { full, short: full.slice(0, 140) + "…", truncated: true };
+    }
+
+    function groupRunsIntoBatches(runs) {
+      const map = new Map();
+      for (const r of runs) {
+        const key = runBatchKey(r);
+        if (!map.has(key)) map.set(key, []);
+        map.get(key).push(r);
+      }
+      const batches = [...map.entries()].map(([key, items]) => {
+        const sorted = [...items].sort((a, b) =>
+          String(a.model_display_name || "").localeCompare(String(b.model_display_name || ""))
+        );
+        const created = sorted
+          .map((r) => r.created_at || "")
+          .sort()
+          .slice(-1)[0] || sorted[0]?.created_at || "";
+        return { key, runs: sorted, created_at: created };
+      });
+      batches.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+      return batches;
+    }
+
+    function ordinalDay(n) {
+      const day = Number(n);
+      const mod100 = day % 100;
+      if (mod100 >= 11 && mod100 <= 13) return `${day}th`;
+      const mod10 = day % 10;
+      if (mod10 === 1) return `${day}st`;
+      if (mod10 === 2) return `${day}nd`;
+      if (mod10 === 3) return `${day}rd`;
+      return `${day}th`;
+    }
+
+    function formatBatchTime(iso) {
+      if (!iso) return "";
+      // Expect UTC ISO from server (e.g. 2026-08-15T08:56:55)
+      let ts = String(iso).trim();
+      if (!ts) return "";
+      if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(ts) && /^\d{4}-\d{2}-\d{2}/.test(ts)) {
+        // Treat bare server timestamps as UTC
+        ts = ts.replace(" ", "T");
+        if (!ts.endsWith("Z")) ts += "Z";
+      }
+      const d = new Date(ts);
+      if (Number.isNaN(d.getTime())) {
+        return String(iso).replace("T", " ").slice(0, 19);
+      }
+      const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December",
+      ];
+      let hours = d.getHours();
+      const minutes = d.getMinutes();
+      const ampm = hours >= 12 ? "pm" : "am";
+      hours = hours % 12;
+      if (hours === 0) hours = 12;
+      const minStr = String(minutes).padStart(2, "0");
+      return `${days[d.getDay()]} ${ordinalDay(d.getDate())} ${months[d.getMonth()]} ${hours}:${minStr}${ampm}`;
+    }
+
+    function renderTestBatch(batch, kind) {
+      const runs = batch.runs;
+      const busy = runs.filter((r) => ["pending", "running", "rendering"].includes(r.status));
+      const sample = runs[0] || {};
+      const prompt = extractBriefPreview(sample);
+      const promptBlock = !prompt.full ? "" : `
+        <div class="test-batch-prompt-wrap" data-batch-key="${escapeAttr(batch.key)}">
+          <div class="test-batch-prompt"
+            data-short="${escapeAttr(prompt.short)}"
+            data-full="${escapeAttr(prompt.full)}">${escapeHtml(prompt.short)}</div>
+          ${prompt.truncated ? `
+            <button type="button" class="prompt-more-btn" data-expanded="0" aria-expanded="false">
+              More
+            </button>
+          ` : ""}
+        </div>
+      `;
+
+      return `
+        <div class="test-batch ${busy.length ? "is-busy" : ""}" data-batch-key="${escapeAttr(batch.key)}">
+          <div class="test-batch-head">
+            <div>
+              <h3 class="test-batch-title">${escapeHtml(formatBatchTime(batch.created_at) || "Test")}</h3>
+              ${promptBlock}
+            </div>
+            <div class="row">
+              <button type="button" class="btn small add-model-btn"
+                data-batch-key="${escapeAttr(batch.key)}"
+                data-source-run-id="${escapeAttr(String(sample.id || ""))}"
+                data-batch-id="${escapeAttr(sample.batch_id || "")}">
+                Add model to test
+              </button>
+              ${busy.length ? `
+                <button type="button" class="btn small danger stop-batch-btn" data-batch-key="${escapeAttr(batch.key)}">
+                  Stop (${busy.length})
+                </button>
+              ` : ""}
+            </div>
+          </div>
+          <div class="results-grid">
+            ${runs.map((r) => renderResultCard(r, kind)).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function isRunBusy(status) {
+      return ["pending", "running", "rendering"].includes(status);
+    }
+
+    function busyStatusLabel(status) {
+      if (status === "pending") return "Queued";
+      if (status === "rendering") return "Rendering";
+      if (status === "running") return "Running";
+      return status || "Working";
+    }
+
+    function renderRunLoadingHtml(message, opts = {}) {
+      const size = opts.size || ""; // "", "tall", "short"
+      const meta = opts.meta || "";
+      const extra = opts.extraHtml || "";
+      return `
+        <div class="media-empty run-loading ${escapeAttr(size)}" role="status" aria-live="polite">
+          <div class="run-loading-spinner" aria-hidden="true"></div>
+          <div>
+            <div class="run-loading-title">${escapeHtml(message || "Working…")}</div>
+            <div class="run-loading-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+          </div>
+          ${meta ? `<div class="run-loading-meta">${escapeHtml(meta)}</div>` : ""}
+          ${extra}
+        </div>
+      `;
+    }
+
+    function loadingMessageForRun(r, copy) {
+      const status = r.status || "";
+      if (status === "failed") return "Generation failed.";
+      if (status === "cancelled") return "Stopped.";
+      if (status === "pending") return "Queued — waiting to start…";
+      if (status === "rendering") {
+        if ((r.task_kind || copy?.sourceLabel) && /Remotion|motion/i.test(copy?.waiting || "")) {
+          return "Rendering with Remotion…";
+        }
+        if (/Strudel|MP3|song/i.test(copy?.waiting || "")) return "Rendering Strudel → MP3…";
+        if (/image|PNG|Screenshot/i.test(copy?.waiting || "")) return "Screenshotting HTML to PNG…";
+        return "Rendering output…";
+      }
+      return copy?.waiting || "Running…";
+    }
+
+    function renderHtmlBenchmark(task) {
+      const kind = task.kind || "html";
+      const copy = kindCopy(kind);
+      const runs = state.runs
+        .filter((r) => r.task_id === task.id)
+        .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+      const needsKey = !state.settings.openrouter_configured;
+      const completed = runs.filter((r) => r.status === "completed");
+      const costs = completed.map((r) => r.cost_usd).filter((c) => c != null && !Number.isNaN(Number(c)));
+      const totalCost = costs.reduce((a, b) => a + Number(b), 0);
+      const batches = groupRunsIntoBatches(runs);
+
+      return `
+        <div class="panel" id="benchmark-panel" data-task-id="${escapeAttr(String(task.id))}">
+          <div class="panel-head">
+            <div>
+              <h2>${escapeHtml(task.name)}</h2>
+              ${task.description ? `<p class="lede">${escapeHtml(task.description)}</p>` : ""}
+            </div>
+            <div class="row">
+              <button type="button" class="btn primary" id="open-create-test">Create test</button>
+              <button type="button" class="btn small" id="backfill-costs">Backfill costs</button>
+              <button type="button" class="btn small" id="refresh-runs">Refresh</button>
+            </div>
+          </div>
+
+          ${needsKey ? `
+            <div class="banner" style="margin-bottom:16px">
+              OpenRouter API key is not configured.
+              <button type="button" class="linkish" id="goto-settings">Add it in Settings</button>
+              to run tests.
+            </div>
+          ` : ""}
+
+          <div id="results-section">
+            ${renderResultsSectionInner(task, runs, batches, copy, completed, costs, totalCost)}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderResultsSectionInner(task, runs, batches, copy, completed, costs, totalCost) {
+      if (!copy) {
+        copy = kindCopy(task.kind || "html");
+      }
+      if (!batches) {
+        batches = groupRunsIntoBatches(runs);
+      }
+      if (!completed) completed = runs.filter((r) => r.status === "completed");
+      if (!costs) {
+        costs = completed.map((r) => r.cost_usd).filter((c) => c != null && !Number.isNaN(Number(c)));
+      }
+      if (totalCost == null) {
+        totalCost = costs.reduce((a, b) => a + Number(b), 0);
+      }
+      const kind = task.kind || "html";
+      if (!runs.length) {
+        return `
+          <div class="empty" style="padding:28px 16px">
+            <strong>No tests yet</strong>
+            ${escapeHtml(copy.emptyResults || "Create a test to compare models.")}
+          </div>
+        `;
+      }
+      return `
+        <div class="row" style="justify-content:space-between;margin-bottom:12px">
+          <div class="tiny">
+            ${batches.length} test${batches.length === 1 ? "" : "s"}
+            · ${completed.length} completed run${completed.length === 1 ? "" : "s"}
+            ${costs.length
+              ? ` · total spend <strong style="color:var(--text)">${formatRunCost(totalCost)}</strong>`
+              : ""}
+          </div>
+        </div>
+        ${batches.map((b) => renderTestBatch(b, kind)).join("")}
+      `;
+    }
+
+    function patchBenchmarkResults(task) {
+      const host = $("results-section");
+      const panel = $("benchmark-panel");
+      if (!host || !panel) return false;
+      if (String(panel.dataset.taskId) !== String(task.id)) return false;
+
+      // Keep create-test modal open: only refresh results
+      if ($("create-test-modal")?.classList.contains("open")) {
+        // still update results underneath
+      }
+
+      const runs = state.runs
+        .filter((r) => r.task_id === task.id)
+        .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+
+      host.innerHTML = renderResultsSectionInner(task, runs);
+      bindResultsEvents(task);
+      return true;
+    }
+
+    function renderCreateTestBody(task) {
+      const kind = task.kind || "html";
+      const copy = kindCopy(kind);
+      const draft = state.draftPrompts[task.id] ?? "";
+      const game = state.draftGames[task.id] || "Tetris";
+      const gameOptions = ["Tetris", "Pac-Man", "Flappy Bird"];
+      return `
+        ${kind === "text" ? renderInstructionSection() : ""}
+        ${kind === "game" ? `
+          <div class="section">
+            <label for="game-select">Game</label>
+            <select id="game-select">
+              ${gameOptions.map((g) =>
+                `<option value="${escapeAttr(g)}" ${g === game ? "selected" : ""}>${escapeHtml(g)}</option>`
+              ).join("")}
+            </select>
+          </div>
+        ` : ""}
+        <div class="section">
+          <label for="html-brief">${escapeHtml(copy.briefLabel)}</label>
+          <textarea id="html-brief" style="min-height:${kind === "game" ? "100" : "120"}px" placeholder="${escapeAttr(copy.briefPlaceholder)}">${escapeHtml(draft)}</textarea>
+          ${copy.briefHint ? `<p class="hint">${escapeHtml(copy.briefHint)}</p>` : ""}
+        </div>
+        <div class="section">
+          <h3 style="margin-bottom:8px">Models</h3>
+          <div id="model-picker">${renderModelPicker()}</div>
+        </div>
+        ${(kind === "draw" || kind === "pen") ? `
+          <p class="tiny" style="margin:12px 0 0">
+            Cost cap:
+            ${state.settings.cost_limit_usd
+              ? `<strong>$${Number(state.settings.cost_limit_usd).toFixed(4)}</strong>`
+              : "none — set one in Settings"}
+          </p>
+        ` : ""}
+      `;
+    }
+
+    function openCreateTestModal(task) {
+      const modal = $("create-test-modal");
+      const body = $("create-test-body");
+      if (!modal || !body || !task) return;
+      state.createTestTaskId = task.id;
+      const copy = kindCopy(task.kind || "html");
+      const lede = $("create-test-lede");
+      if (lede) {
+        lede.textContent = copy.briefHint
+          ? "Pick models and enter a prompt. All selected models run together as one test."
+          : "Pick models and enter a prompt. All selected models run together as one test.";
+      }
+      body.innerHTML = renderCreateTestBody(task);
+      // model-picker is new — clear stale delegate flag
+      const picker = $("model-picker");
+      if (picker) delete picker.dataset.delegateBound;
+      bindModelPickerEvents({ focusSearch: false });
+      if ((task.kind || "") === "text") bindInstructionEvents();
+      const gameEl = $("game-select");
+      if (gameEl) {
+        gameEl.onchange = () => {
+          state.draftGames[task.id] = gameEl.value;
+        };
+      }
+      const briefEl = $("html-brief");
+      if (briefEl) {
+        briefEl.oninput = () => {
+          state.draftPrompts[task.id] = briefEl.value;
+        };
+      }
+      const status = $("create-test-status");
+      if (status) status.textContent = "";
+      modal.hidden = false;
+      modal.classList.add("open");
+      if (state.settings.openrouter_configured) {
+        ensureOpenrouterModels()
+          .then(() => refreshModelPickerDom())
+          .catch(() => refreshModelPickerDom());
+      }
+      setTimeout(() => {
+        if (briefEl) briefEl.focus();
+      }, 0);
+    }
+
+    function closeCreateTestModal() {
+      const modal = $("create-test-modal");
+      if (!modal) return;
+      modal.classList.remove("open");
+      modal.hidden = true;
+      state.createTestTaskId = null;
+      const body = $("create-test-body");
+      if (body) body.innerHTML = "";
+    }
+
+    async function submitCreateTest() {
+      const task = state.tasks.find((t) => t.id === state.createTestTaskId)
+        || state.tasks.find((t) => t.id === state.activeTab);
+      if (!task) return toast("No benchmark selected", true);
+      if (!state.settings.openrouter_configured) {
+        toast("Add your OpenRouter API key in Settings first", true);
+        closeCreateTestModal();
+        goTab("settings");
+        return;
+      }
+      const brief = ($("html-brief")?.value || "").trim();
+      const openrouterIds = [...state.selectedOpenrouterIds];
+      if (!openrouterIds.length) return toast("Add at least one model", true);
+
+      const kind = task.kind || "html";
+      const status = $("create-test-status");
+      const submitBtn = $("create-test-submit");
+
+      const payload = {
+        task_id: task.id,
+        openrouter_ids: openrouterIds,
+        user_prompt: brief,
+      };
+
+      if (kind === "text") {
+        const selected = state.instructions.find(
+          (i) => String(i.id) === String(state.selectedInstructionId)
+        );
+        const instruction = (selected?.body || state.instructionBodyDraft || "").trim();
+        if (!selected && !instruction) {
+          return toast("Select a skill first (or add one under Manage skills)", true);
+        }
+        if (!instruction) return toast("Selected skill has no instruction text", true);
+        if (!brief) return toast("Enter a user prompt first", true);
+        payload.system_prompt = instruction;
+        if (state.selectedInstructionId != null) {
+          payload.instruction_id = state.selectedInstructionId;
+        }
+      } else if (kind === "game") {
+        const game = ($("game-select")?.value || state.draftGames[task.id] || "Tetris").trim();
+        payload.game = game;
+        state.draftGames[task.id] = game;
+        // brief is optional for game maker
+      } else if (!brief) {
+        return toast("Enter a brief / prompt first", true);
+      }
+
+      try {
+        if (status) status.textContent = "Starting…";
+        if (submitBtn) submitBtn.disabled = true;
+        const data = await api("/api/runs", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+        toast(`Started test with ${data.count} model${data.count === 1 ? "" : "s"}`);
+        closeCreateTestModal();
+        await loadRunsForActive({ patch: true });
+        startPolling();
+      } catch (err) {
+        if (status) status.textContent = "";
+        toast(err.message, true);
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    }
+
+    function bindCreateTestModalEvents() {
+      const modal = $("create-test-modal");
+      if (!modal || modal.dataset.bound === "1") return;
+      modal.dataset.bound = "1";
+
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeCreateTestModal();
+      });
+      const closeBtn = $("create-test-close");
+      if (closeBtn) closeBtn.onclick = () => closeCreateTestModal();
+      const submitBtn = $("create-test-submit");
+      if (submitBtn) submitBtn.onclick = () => submitCreateTest();
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        if (!modal.classList.contains("open")) return;
+        // If skill manager is open on top, let that handler close it first
+        const skill = $("skill-modal");
+        if (skill && skill.classList.contains("open")) return;
+        e.preventDefault();
+        closeCreateTestModal();
+      });
+    }
+
+    function openAddModelModal(task, opts = {}) {
+      const modal = $("add-model-modal");
+      const body = $("add-model-body");
+      if (!modal || !body || !task) return;
+      const sourceRunId = opts.sourceRunId;
+      if (!sourceRunId) return toast("Could not find this test's prompt", true);
+
+      state.addModelContext = {
+        taskId: task.id,
+        batchKey: opts.batchKey || "",
+        sourceRunId: Number(sourceRunId),
+        batchId: opts.batchId || "",
+      };
+      // Start with a clean selection for this action
+      state.selectedOpenrouterIds = [];
+      state.modelFilter = "";
+
+      body.innerHTML = `
+        <div class="section" style="margin-top:0;padding-top:0;border:0">
+          <h3 style="margin-bottom:8px">Models to add</h3>
+          <div id="model-picker">${renderModelPicker()}</div>
+        </div>
+      `;
+      const picker = $("model-picker");
+      if (picker) delete picker.dataset.delegateBound;
+      bindModelPickerEvents({ focusSearch: true });
+
+      const status = $("add-model-status");
+      if (status) status.textContent = "";
+      modal.hidden = false;
+      modal.classList.add("open");
+
+      if (state.settings.openrouter_configured) {
+        ensureOpenrouterModels()
+          .then(() => refreshModelPickerDom({ focusSearch: true }))
+          .catch(() => refreshModelPickerDom({ focusSearch: true }));
+      }
+    }
+
+    function closeAddModelModal() {
+      const modal = $("add-model-modal");
+      if (!modal) return;
+      modal.classList.remove("open");
+      modal.hidden = true;
+      state.addModelContext = null;
+      const body = $("add-model-body");
+      if (body) body.innerHTML = "";
+    }
+
+    async function submitAddModel() {
+      const ctx = state.addModelContext;
+      if (!ctx) return toast("No test selected", true);
+      if (!state.settings.openrouter_configured) {
+        toast("Add your OpenRouter API key in Settings first", true);
+        closeAddModelModal();
+        goTab("settings");
+        return;
+      }
+      const openrouterIds = [...state.selectedOpenrouterIds];
+      if (!openrouterIds.length) return toast("Add at least one model", true);
+
+      const status = $("add-model-status");
+      const submitBtn = $("add-model-submit");
+      const payload = {
+        task_id: ctx.taskId,
+        openrouter_ids: openrouterIds,
+        reuse_from_run_id: ctx.sourceRunId,
+      };
+      if (ctx.batchId) payload.batch_id = ctx.batchId;
+
+      try {
+        if (status) status.textContent = "Starting…";
+        if (submitBtn) submitBtn.disabled = true;
+        const data = await api("/api/runs", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+        toast(`Added ${data.count} model${data.count === 1 ? "" : "s"} to test`);
+        closeAddModelModal();
+        await loadRunsForActive({ patch: true });
+        startPolling();
+      } catch (err) {
+        if (status) status.textContent = "";
+        toast(err.message, true);
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    }
+
+    function bindAddModelModalEvents() {
+      const modal = $("add-model-modal");
+      if (!modal || modal.dataset.bound === "1") return;
+      modal.dataset.bound = "1";
+
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeAddModelModal();
+      });
+      const closeBtn = $("add-model-close");
+      if (closeBtn) closeBtn.onclick = () => closeAddModelModal();
+      const submitBtn = $("add-model-submit");
+      if (submitBtn) submitBtn.onclick = () => submitAddModel();
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        if (!modal.classList.contains("open")) return;
+        const skill = $("skill-modal");
+        if (skill && skill.classList.contains("open")) return;
+        e.preventDefault();
+        closeAddModelModal();
+      });
+    }
+
+    function renderResultCard(r, kind) {
+      const costLabel = formatRunCost(r.cost_usd);
+      const copy = kindCopy(kind);
+      const isRemotion = kind === "remotion";
+      const isStrudel = kind === "strudel";
+      const isImage = kind === "image";
+      const isText = kind === "text";
+      const isDraw = kind === "draw";
+      const isPen = kind === "pen";
+      const isGame = kind === "game";
+      const hasVideo = !!(r.has_video || r.video_url);
+      const hasAudio = !!(r.has_audio || r.audio_url);
+      const hasImage = !!(r.has_image || r.image_url);
+      const videoUrl = url(`/api/runs/${r.id}/video?t=${encodeURIComponent(r.completed_at || r.created_at || "")}`);
+      const audioUrl = url(`/api/runs/${r.id}/audio?t=${encodeURIComponent(r.completed_at || r.created_at || "")}`);
+      const imageUrl = url(`/api/runs/${r.id}/image?t=${encodeURIComponent(r.completed_at || r.created_at || "")}`);
+      const previewUrl = url(`/api/runs/${r.id}/preview?t=${encodeURIComponent(r.completed_at || r.created_at || "")}`);
+      const htmlReady = !isRemotion && !isStrudel && !isText && !isImage && !isDraw && !isPen && r.status === "completed" && (r.output_text || "").trim();
+      // game uses the same HTML preview path as htmlReady
+      const textReady = isText && r.status === "completed" && (r.output_text || "").trim();
+      const drawReady = isDraw && !!(r.has_preview || r.preview_html);
+      const drawBusy = isDraw && ["pending", "running"].includes(r.status);
+      const penReady = isPen && !!(r.has_preview || (r.pen_commands && r.pen_commands.length));
+      const penBusy = isPen && ["pending", "running"].includes(r.status);
+      const codeReady = !!(r.output_text || "").trim();
+
+      const busy = isRunBusy(r.status);
+      const elapsed = formatElapsed(r.created_at);
+      const busyMeta = [
+        busyStatusLabel(r.status),
+        elapsed ? `${elapsed} elapsed` : "",
+        r.est_cost_usd != null ? `est ${formatRunCost(r.est_cost_usd)}` : "",
+      ].filter(Boolean).join(" · ");
+
+      let media = "";
+      if (isRemotion) {
+        if (hasVideo) {
+          media = `
+            <div class="video-frame-wrap">
+              <video controls playsinline preload="metadata" src="${videoUrl}"></video>
+            </div>`;
+        } else if (r.status === "failed") {
+          media = `<div class="media-empty empty" style="border:0;min-height:280px;display:flex;align-items:center;justify-content:center">Render failed.</div>`;
+        } else if (busy) {
+          media = renderRunLoadingHtml(
+            r.status === "rendering" ? "Rendering with Remotion…" : loadingMessageForRun(r, copy),
+            { size: "tall", meta: busyMeta }
+          );
+        } else {
+          media = `<div class="media-empty empty" style="border:0;min-height:280px;display:flex;align-items:center;justify-content:center">No video yet.</div>`;
+        }
+      } else if (isStrudel) {
+        if (hasAudio) {
+          media = `
+            <div class="audio-frame-wrap">
+              <div class="audio-label">MP3 · ${escapeHtml(r.model_display_name || "model")}</div>
+              <audio controls preload="metadata" src="${audioUrl}"></audio>
+            </div>`;
+        } else if (r.status === "failed") {
+          media = `<div class="media-empty empty" style="border:0;min-height:200px;display:flex;align-items:center;justify-content:center">Song render failed.</div>`;
+        } else if (busy) {
+          media = renderRunLoadingHtml(
+            r.status === "rendering" ? "Rendering Strudel → MP3…" : loadingMessageForRun(r, copy),
+            { size: "short", meta: busyMeta }
+          );
+        } else {
+          media = `<div class="media-empty empty" style="border:0;min-height:200px;display:flex;align-items:center;justify-content:center">No audio yet.</div>`;
+        }
+      } else if (isImage) {
+        if (hasImage) {
+          media = `
+            <div class="image-frame-wrap">
+              <img src="${imageUrl}" alt="Generated square graphic from ${escapeAttr(r.model_display_name)}" />
+            </div>`;
+        } else if (r.status === "failed") {
+          media = `<div class="media-empty empty" style="border:0;min-height:280px;display:flex;align-items:center;justify-content:center">Image render failed.</div>`;
+        } else if (busy) {
+          media = renderRunLoadingHtml(
+            r.status === "rendering" ? "Screenshotting HTML to PNG…" : loadingMessageForRun(r, copy),
+            { size: "tall", meta: busyMeta }
+          );
+        } else {
+          media = `<div class="media-empty empty" style="border:0;min-height:280px;display:flex;align-items:center;justify-content:center">No image yet.</div>`;
+        }
+      } else if (isDraw) {
+        if (drawReady) {
+          media = `
+            <div class="draw-frame-wrap" data-preview-len="${(r.preview_html || "").length}">
+              <span class="draw-live" ${drawBusy ? "" : "hidden"}>
+                <span class="pulse"></span>
+                <span class="draw-live-label">drawing…</span>
+              </span>
+              <iframe sandbox="" referrerpolicy="no-referrer"
+                title="Draw ${escapeAttr(r.model_display_name)}"></iframe>
+            </div>`;
+        } else {
+          if (r.status === "cancelled") {
+            media = `<div class="media-empty empty draw-wait" style="border:0;min-height:280px;display:flex;align-items:center;justify-content:center">Stopped.</div>`;
+          } else if (r.status === "failed") {
+            media = `<div class="media-empty empty draw-wait" style="border:0;min-height:280px;display:flex;align-items:center;justify-content:center">${escapeHtml(r.error ? `Drawing failed: ${r.error}` : "Drawing failed.")}</div>`;
+          } else if (drawBusy) {
+            media = renderDrawWaitHtml(r, copy);
+          } else {
+            media = `<div class="media-empty empty" style="border:0;min-height:280px;display:flex;align-items:center;justify-content:center">No drawing yet.</div>`;
+          }
+        }
+      } else if (isPen) {
+        if (penReady) {
+          media = `
+            <div class="ink-frame-wrap">
+              <span class="draw-live" ${penBusy ? "" : "hidden"}>
+                <span class="pulse"></span>
+                <span class="draw-live-label">sketching…</span>
+              </span>
+              <canvas class="ink-canvas" width="1024" height="1024" aria-label="Pen drawing from ${escapeAttr(r.model_display_name)}"></canvas>
+            </div>`;
+        } else if (r.status === "cancelled") {
+          media = `<div class="media-empty empty draw-wait" style="border:0;min-height:280px;display:flex;align-items:center;justify-content:center">Stopped.</div>`;
+        } else if (r.status === "failed") {
+          media = `<div class="media-empty empty draw-wait" style="border:0;min-height:280px;display:flex;align-items:center;justify-content:center">${escapeHtml(r.error ? `Sketch failed: ${r.error}` : "Sketch failed.")}</div>`;
+        } else if (penBusy) {
+          media = renderDrawWaitHtml(r, copy);
+        } else {
+          media = `<div class="media-empty empty" style="border:0;min-height:280px;display:flex;align-items:center;justify-content:center">No sketch yet.</div>`;
+        }
+      } else if (isText) {
+        if (textReady) {
+          media = `<pre class="out" style="margin:0;border:0;border-radius:0;max-height:380px;background:#fff">${escapeHtml(r.output_text)}</pre>`;
+        } else if (r.status === "failed") {
+          media = `<div class="media-empty empty" style="border:0;min-height:200px;display:flex;align-items:center;justify-content:center">Generation failed.</div>`;
+        } else if (busy) {
+          media = renderRunLoadingHtml(loadingMessageForRun(r, copy), { size: "short", meta: busyMeta });
+        } else {
+          media = renderRunLoadingHtml(copy.waiting, { size: "short", meta: busyMeta });
+        }
+      } else {
+        if (htmlReady) {
+          if (isGame) {
+            media = `
+              <div class="preview-frame-wrap game-preview" data-run-id="${r.id}">
+                <div class="game-controls">
+                  <button type="button" class="btn small primary game-play-btn" data-run-id="${r.id}">Play</button>
+                  <button type="button" class="btn small game-pause-btn" data-run-id="${r.id}" hidden>Pause</button>
+                  <span class="game-status" data-run-id="${r.id}">Paused</span>
+                </div>
+                <iframe class="game-frame" sandbox="allow-scripts allow-forms allow-modals"
+                  referrerpolicy="no-referrer"
+                  title="Game ${escapeAttr(r.model_display_name)}"
+                  src="${previewUrl}"
+                  data-run-id="${r.id}"></iframe>
+              </div>`;
+          } else {
+            media = `<div class="preview-frame-wrap"><iframe sandbox="allow-scripts allow-forms allow-modals" referrerpolicy="no-referrer" title="Preview ${escapeAttr(r.model_display_name)}" src="${previewUrl}"></iframe></div>`;
+          }
+        } else if (r.status === "failed") {
+          media = `<div class="media-empty empty" style="border:0;min-height:360px;display:flex;align-items:center;justify-content:center">Generation failed.</div>`;
+        } else if (busy) {
+          media = renderRunLoadingHtml(loadingMessageForRun(r, copy), { size: "tall", meta: busyMeta });
+        } else {
+          media = `<div class="media-empty empty" style="border:0;min-height:360px;display:flex;align-items:center;justify-content:center">No output yet.</div>`;
+        }
+      }
+
+      let openLink = "";
+      if (isRemotion && hasVideo) {
+        openLink = `<a class="btn small" style="margin-left:auto;text-decoration:none" href="${videoUrl}" target="_blank" rel="noopener">Open video ↗</a>`;
+      } else if (isStrudel && hasAudio) {
+        openLink = `<a class="btn small" style="margin-left:auto;text-decoration:none" href="${audioUrl}" target="_blank" rel="noopener" download="run_${r.id}.mp3">Download MP3 ↗</a>`;
+      } else if (isImage && hasImage) {
+        openLink = `<a class="btn small" style="margin-left:auto;text-decoration:none" href="${imageUrl}" target="_blank" rel="noopener" download>Open PNG ↗</a>`;
+      } else if (htmlReady || drawReady || penReady) {
+        openLink = `<a class="btn small" style="margin-left:auto;text-decoration:none" href="${previewUrl}" target="_blank" rel="noopener">Open ↗</a>`;
+      }
+
+      const replayBtn = ((isDraw && r.status === "completed" && drawReady) || (isPen && r.status === "completed" && penReady))
+        ? `<button type="button" class="btn small replay-draw-btn" data-id="${r.id}">Replay</button>`
+        : "";
+
+      const togglePreviewLabel = isRemotion
+        ? "Video"
+        : (isStrudel
+          ? "MP3"
+          : (isImage ? "Image" : (isText ? "Output" : (isPen ? "Sketch" : (isDraw ? "Drawing" : (isGame ? "Game" : "Preview"))))));
+      const secondaryLabel = isText ? "Prompt used" : copy.sourceLabel;
+      const secondaryBody = isText
+        ? [
+            r.system_prompt_snapshot ? `// Instruction\n${r.system_prompt_snapshot}` : "",
+            r.user_prompt_snapshot ? `// Prompt\n${r.user_prompt_snapshot}` : "",
+          ].filter(Boolean).join("\n\n") || "(no snapshot)"
+        : (r.output_text || (codeReady ? "" : "// no output yet"));
+
+      return `
+        <article class="result-card ${busy ? "is-busy" : ""}" data-run-id="${r.id}">
+          <div class="result-head">
+            <div>
+              ${(() => {
+                const labels = formatModelPresentation(r.model_openrouter_id, r.model_display_name);
+                return `
+                  <strong>${escapeHtml(labels.title)}</strong>
+                  <span class="model-id">${escapeHtml(labels.provider)}</span>
+                `;
+              })()}
+            </div>
+            <div style="text-align:right">
+              <span class="badge ${escapeAttr(r.status)}">${escapeHtml(r.status)}</span>
+              ${(() => {
+                const latencyLabel = formatLatencySeconds(r.latency_ms);
+                const bits = [];
+                if (costLabel) bits.push(costLabel);
+                else if (r.status === "completed") bits.push("cost n/a");
+                if (latencyLabel) bits.push(latencyLabel);
+                if (!bits.length) return "";
+                return `<div class="score run-cost-latency" style="margin-top:6px;font-size:0.95rem" title="Cost and response time">${bits.map(escapeHtml).join(" · ")}</div>`;
+              })()}
+            </div>
+          </div>
+          ${r.error ? `<div class="error-line">${escapeHtml(r.error)}</div>` : ""}
+          <div class="view-toggle">
+            <button type="button" class="view-btn active" data-view="preview" data-id="${r.id}">${togglePreviewLabel}</button>
+            <button type="button" class="view-btn" data-view="source" data-id="${r.id}">${escapeHtml(secondaryLabel)}</button>
+            ${replayBtn}
+            ${openLink}
+          </div>
+          ${media}
+          <pre class="source-view">${escapeHtml(secondaryBody)}</pre>
+          <div class="result-foot">
+            <div class="row">
+              ${["pending", "running", "rendering"].includes(r.status)
+                ? `<button type="button" class="btn small danger stop-run-btn" data-id="${r.id}">Stop</button>`
+                : `<button type="button" class="btn small rerun-btn" data-id="${r.id}">Re-run</button>`}
+              <button type="button" class="btn small danger delete-run-btn" data-id="${r.id}">Delete</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderTextBenchmark(task) {
+      // Fallback for non-html kinds
+      const runs = state.runs.filter((r) => r.task_id === task.id);
+      return `
+        <div class="panel">
+          <h2>${escapeHtml(task.name)}</h2>
+          <p class="lede">${escapeHtml(task.description || "")}</p>
+          <div class="empty">This benchmark type (${escapeHtml(task.kind || "text")}) uses plain text results.
+          ${runs.length ? `<br><br>${runs.length} run(s) stored.` : ""}</div>
+        </div>
+      `;
+    }
+
+    function renderMain() {
+      const main = $("main");
+      if (state.activeTab === "leaderboard") {
+        main.innerHTML = renderLeaderboard();
+        return;
+      }
+      if (state.activeTab === "new-models") {
+        main.innerHTML = renderNewModelsPage();
+        bindNewModelsEvents();
+        return;
+      }
+      if (state.activeTab === "settings") {
+        main.innerHTML = renderSettings();
+        bindSettingsEvents();
+        return;
+      }
+      const task = state.tasks.find((t) => t.id === state.activeTab);
+      if (!task) {
+        main.innerHTML = `<div class="panel"><div class="empty">Benchmark not found.</div></div>`;
+        return;
+      }
+      if (isPromptKind(task.kind || "text")) {
+        main.innerHTML = renderHtmlBenchmark(task);
+        bindHtmlBenchmarkEvents(task);
+      } else {
+        main.innerHTML = renderTextBenchmark(task);
+      }
+    }
+
+    function localDayKey(d) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+
+    function startOfLocalDay(d = new Date()) {
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+
+    function formatDayHeading(d) {
+      const today = startOfLocalDay();
+      const day = startOfLocalDay(d);
+      const diff = Math.round((today - day) / 86400000);
+      if (diff === 0) return "Today";
+      if (diff === 1) return "Yesterday";
+      // Reuse friendly batch date style without time: "Wed 12th March"
+      const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December",
+      ];
+      return `${days[day.getDay()]} ${ordinalDay(day.getDate())} ${months[day.getMonth()]}`;
+    }
+
+    function modelsByDayLastWeek(models) {
+      const today = startOfLocalDay();
+      const weekStart = new Date(today);
+      weekStart.setDate(weekStart.getDate() - 6);
+      const weekStartMs = weekStart.getTime();
+      const endMs = today.getTime() + 86400000 - 1;
+
+      const byDay = new Map();
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        byDay.set(localDayKey(d), { date: d, models: [] });
+      }
+
+      for (const m of models || []) {
+        const created = Number(m.created);
+        if (!created || Number.isNaN(created)) continue;
+        // OpenRouter uses unix seconds
+        const ms = created < 1e12 ? created * 1000 : created;
+        if (ms < weekStartMs || ms > endMs) continue;
+        const d = new Date(ms);
+        const key = localDayKey(d);
+        const bucket = byDay.get(key);
+        if (bucket) bucket.models.push(m);
+      }
+
+      for (const bucket of byDay.values()) {
+        bucket.models.sort((a, b) => {
+          const ca = Number(b.created) - Number(a.created);
+          if (ca) return ca;
+          return String(a.name || a.id || "").localeCompare(String(b.name || b.id || ""));
+        });
+      }
+
+      return [...byDay.values()];
+    }
+
+    function renderNewModelsPage() {
+      if (state.newModelsLoading && !state.openrouterModels.length) {
+        return `
+          <div class="panel">
+            <h2>New models</h2>
+            <p class="lede">Checking OpenRouter for models listed in the last 7 days…</p>
+            <div class="empty"><strong>Loading</strong>Fetching model catalogue…</div>
+          </div>
+        `;
+      }
+
+      const days = modelsByDayLastWeek(state.openrouterModels);
+      const total = days.reduce((n, d) => n + d.models.length, 0);
+      const fetchedNote = state.newModelsFetchedAt
+        ? `Checked ${new Date(state.newModelsFetchedAt * 1000).toLocaleString()}`
+        : "";
+
+      const body = days.map((day) => {
+        const rows = !day.models.length
+          ? `<div class="new-models-empty-day">No new models</div>`
+          : `<div class="new-models-list">${day.models.map((m) => {
+              const labels = formatModelPresentation(m.id, m.name);
+              const pin = m.pricing?.prompt_per_million;
+              const pout = m.pricing?.completion_per_million;
+              const free = m.is_free || (pin === 0 && pout === 0);
+              const price = free
+                ? "Free"
+                : `${formatUsdPerM(pin)} / ${formatUsdPerM(pout)} per 1M`;
+              const ctx = m.context_length
+                ? `${Number(m.context_length).toLocaleString()} ctx`
+                : "";
+              return `
+                <div class="new-model-row">
+                  <div>
+                    <div class="name">${escapeHtml(labels.title)}</div>
+                    <span class="provider">${escapeHtml(labels.provider)}</span>
+                  </div>
+                  <div class="meta">
+                    <span>${free ? `<span class="price free">Free</span>` : escapeHtml(price)}</span>
+                    ${ctx ? `<span>${escapeHtml(ctx)}</span>` : ""}
+                  </div>
+                </div>
+              `;
+            }).join("")}</div>`;
+
+        return `
+          <div class="new-models-day">
+            <h3>${escapeHtml(formatDayHeading(day.date))}
+              <span class="tiny" style="margin-left:8px;font-weight:500;text-transform:none;letter-spacing:0">
+                ${day.models.length} model${day.models.length === 1 ? "" : "s"}
+              </span>
+            </h3>
+            ${rows}
+          </div>
+        `;
+      }).join("");
+
+      return `
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>New models</h2>
+              <p class="lede">Models OpenRouter listed in the last 7 days, grouped by day. Refreshes when you open this page.</p>
+            </div>
+            <div class="row">
+              <button type="button" class="btn small" id="refresh-new-models">Refresh</button>
+            </div>
+          </div>
+          ${state.newModelsError ? `
+            <div class="banner">${escapeHtml(state.newModelsError)}</div>
+          ` : ""}
+          <div class="tiny" style="margin-bottom:14px">
+            ${total} new model${total === 1 ? "" : "s"} this week
+            ${fetchedNote ? ` · ${escapeHtml(fetchedNote)}` : ""}
+            ${state.newModelsLoading ? " · refreshing…" : ""}
+          </div>
+          ${body}
+        </div>
+      `;
+    }
+
+    function bindNewModelsEvents() {
+      const btn = $("refresh-new-models");
+      if (btn) {
+        btn.onclick = () => loadNewModelsPage(true).catch((e) => toast(e.message, true));
+      }
+    }
+
+    async function loadNewModelsPage(force = true) {
+      // Always re-check when the page is opened (force default true)
+      state.newModelsLoading = true;
+      state.newModelsError = "";
+      if (state.activeTab === "new-models") renderMain();
+      try {
+        await ensureOpenrouterModels(!!force);
+        state.newModelsFetchedAt = Date.now() / 1000;
+        if (!state.openrouterModels.length && state.openrouterModelsError) {
+          state.newModelsError = state.openrouterModelsError;
+        }
+      } catch (err) {
+        state.newModelsError = err.message || "Failed to load models";
+      } finally {
+        state.newModelsLoading = false;
+        if (state.activeTab === "new-models") renderMain();
+      }
+    }
+
+    function updateHealthPill() {
+      const s = state.settings || {};
+      if (s.openrouter_configured) {
+        $("health-dot").classList.add("ok");
+        const src = s.openrouter_key_source === "ui" ? "key saved" : "key from env";
+        $("health-text").textContent = `OpenRouter ready · ${src}`;
+      } else {
+        $("health-dot").classList.remove("ok");
+        $("health-text").textContent = "Add OpenRouter key in Settings";
+      }
+    }
+
+    function bindSettingsEvents() {
+      const status = $("settings-status");
+      $("save-or-key").onclick = async () => {
+        const key = ($("or-key").value || "").trim();
+        if (!key) return toast("Paste an API key first", true);
+        try {
+          if (status) status.textContent = "Saving…";
+          const data = await api("/api/settings", {
+            method: "POST",
+            body: JSON.stringify({ openrouter_api_key: key }),
+          });
+          // Re-fetch so masked key is definitely shown from server truth
+          const fresh = await api("/api/settings");
+          state.settings = fresh.settings || data.settings || state.settings;
+          updateHealthPill();
+          renderMain();
+          const st = $("settings-status");
+          if (st) {
+            st.textContent = state.settings.openrouter_key_masked
+              ? `Saved. Active key: ${state.settings.openrouter_key_masked}`
+              : (data.message || "Key saved");
+          }
+          toast(
+            state.settings.openrouter_key_masked
+              ? `Key saved: ${state.settings.openrouter_key_masked}`
+              : (data.message || "Key saved")
+          );
+        } catch (err) {
+          if (status) status.textContent = "";
+          toast(err.message, true);
+        }
+      };
+
+      $("clear-or-key").onclick = async () => {
+        if (!confirm("Clear the key saved in this tool? Env keys (if any) still apply.")) return;
+        try {
+          const data = await api("/api/settings", {
+            method: "POST",
+            body: JSON.stringify({ openrouter_api_key: "" }),
+          });
+          const fresh = await api("/api/settings");
+          state.settings = fresh.settings || data.settings || state.settings;
+          updateHealthPill();
+          renderMain();
+          const st = $("settings-status");
+          if (st) st.textContent = "Saved key cleared.";
+          toast(data.message || "Cleared");
+        } catch (err) {
+          toast(err.message, true);
+        }
+      };
+
+      const saveCap = $("save-cost-limit");
+      if (saveCap) {
+        saveCap.onclick = async () => {
+          const raw = ($("cost-limit")?.value || "").trim();
+          const st = $("cost-limit-status");
+          try {
+            if (st) st.textContent = "Saving…";
+            const data = await api("/api/settings", {
+              method: "POST",
+              body: JSON.stringify({
+                cost_limit_usd: raw === "" ? "" : Number(raw),
+              }),
+            });
+            const fresh = await api("/api/settings");
+            state.settings = fresh.settings || data.settings || state.settings;
+            if (st) {
+              st.textContent = state.settings.cost_limit_usd
+                ? `Current cap: $${Number(state.settings.cost_limit_usd).toFixed(4)}`
+                : "No cap set.";
+            }
+            toast(data.message || "Cost cap saved");
+          } catch (err) {
+            if (st) st.textContent = "";
+            toast(err.message, true);
+          }
+        };
+      }
+
+      $("test-or-key").onclick = async () => {
+        try {
+          if (status) status.textContent = "Testing…";
+          // If user typed a new key, save it first so the test uses it
+          const typed = ($("or-key").value || "").trim();
+          if (typed) {
+            await api("/api/settings", {
+              method: "POST",
+              body: JSON.stringify({ openrouter_api_key: typed }),
+            });
+          }
+          const res = await fetch(url("/api/settings/test"), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: "{}",
+          });
+          const data = await res.json();
+          const fresh = await api("/api/settings");
+          state.settings = fresh.settings || data.settings || state.settings;
+          updateHealthPill();
+          renderMain();
+          const st = $("settings-status");
+          if (!res.ok || !data.ok) {
+            if (st) st.textContent = data.error || "Connection failed";
+            toast(data.error || "Connection failed", true);
+            return;
+          }
+          if (st) {
+            st.textContent = `${data.message || "OpenRouter OK"}${
+              state.settings.openrouter_key_masked
+                ? ` · ${state.settings.openrouter_key_masked}`
+                : ""
+            }`;
+          }
+          toast(data.message || "OpenRouter OK");
+        } catch (err) {
+          if (status) status.textContent = "";
+          toast(err.message, true);
+        }
+      };
+    }
+
+    function refreshModelPickerDom(opts = {}) {
+      const wrap = $("model-picker");
+      if (!wrap) return;
+      const hadFocus = document.activeElement && document.activeElement.id === "model-search";
+      wrap.innerHTML = renderModelPicker();
+      bindModelPickerEvents({ focusSearch: !!(opts.focusSearch || hadFocus) });
+    }
+
+    function refreshSearchResultsOnly() {
+      const wrap = $("model-results-wrap");
+      if (!wrap) return;
+      wrap.innerHTML = renderSearchResultsHtml();
+      // Keep highlighted row visible
+      const active = wrap.querySelector(".model-result.active");
+      if (active) active.scrollIntoView({ block: "nearest" });
+    }
+
+    function bindModelPickerEvents(opts = {}) {
+      const picker = $("model-picker");
+      const search = $("model-search");
+      if (search) {
+        if (opts.focusSearch) {
+          search.focus();
+          const val = search.value;
+          try { search.setSelectionRange(val.length, val.length); } catch { /* ignore */ }
+        }
+
+        search.oninput = () => {
+          state.modelFilter = search.value;
+          state.modelHighlight = 0;
+          refreshSearchResultsOnly();
+          // Kick a catalogue load if user searches before models arrived
+          if ((state.modelFilter || "").trim() && !state.openrouterModels.length) {
+            ensureOpenrouterModels()
+              .then(() => refreshSearchResultsOnly())
+              .catch(() => refreshSearchResultsOnly());
+          }
+        };
+
+        search.onfocus = () => {
+          if (!state.openrouterModels.length && state.settings.openrouter_configured) {
+            ensureOpenrouterModels()
+              .then(() => {
+                if ((state.modelFilter || "").trim()) refreshSearchResultsOnly();
+              })
+              .catch(() => {});
+          }
+        };
+
+        search.onkeydown = (e) => {
+          const q = (state.modelFilter || "").trim();
+          if (!q) {
+            if (e.key === "Escape") search.blur();
+            return;
+          }
+
+          const available = filteredOpenrouterModels().slice(0, 80);
+          if (!available.length) {
+            if (e.key === "Escape") {
+              state.modelFilter = "";
+              search.value = "";
+              refreshSearchResultsOnly();
+            }
+            return;
+          }
+
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            state.modelHighlight = Math.min((state.modelHighlight || 0) + 1, available.length - 1);
+            refreshSearchResultsOnly();
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            state.modelHighlight = Math.max((state.modelHighlight || 0) - 1, 0);
+            refreshSearchResultsOnly();
+          } else if (e.key === "Enter") {
+            e.preventDefault();
+            const pick = available[state.modelHighlight || 0];
+            if (pick) addSelectedModel(pick.id);
+          } else if (e.key === "Escape") {
+            state.modelFilter = "";
+            search.value = "";
+            state.modelHighlight = 0;
+            refreshSearchResultsOnly();
+          }
+        };
+      }
+
+      // Event delegation so result rows keep working after partial refreshes
+      if (picker && picker.dataset.delegateBound !== "1") {
+        picker.dataset.delegateBound = "1";
+        picker.addEventListener("click", (e) => {
+          const result = e.target.closest(".model-result");
+          if (result && picker.contains(result)) {
+            e.preventDefault();
+            addSelectedModel(result.dataset.id);
+            return;
+          }
+          const remove = e.target.closest(".remove-model");
+          if (remove && picker.contains(remove)) {
+            e.preventDefault();
+            const id = remove.dataset.id;
+            state.selectedOpenrouterIds = state.selectedOpenrouterIds.filter((x) => x !== id);
+            refreshModelPickerDom({ focusSearch: true });
+            return;
+          }
+          const reload = e.target.closest("#reload-models");
+          if (reload && picker.contains(reload)) {
+            e.preventDefault();
+            picker.innerHTML = `<div class="tiny">Loading OpenRouter models…</div>`;
+            // keep delegateBound on the same element after content swap
+            ensureOpenrouterModels(true).then(() => {
+              refreshModelPickerDom({ focusSearch: true });
+              if (state.openrouterModelsError && !state.openrouterModels.length) {
+                toast(state.openrouterModelsError, true);
+              } else {
+                toast(`Loaded ${state.openrouterModels.length} models`);
+              }
+            });
+          }
+        });
+      }
+    }
+
+    function bindInstructionEvents() {
+      const select = $("instruction-select");
+      if (select) {
+        select.onchange = () => {
+          applySelectedInstruction(select.value || null);
+        };
+      }
+
+      const manageBtn = $("manage-skills");
+      if (manageBtn) {
+        manageBtn.onclick = () => openSkillModal(state.selectedInstructionId);
+      }
+    }
+
+    function setGameControlUi(runId, playing) {
+      const playBtn = document.querySelector(`.game-play-btn[data-run-id="${runId}"]`);
+      const pauseBtn = document.querySelector(`.game-pause-btn[data-run-id="${runId}"]`);
+      const status = document.querySelector(`.game-status[data-run-id="${runId}"]`);
+      if (playBtn) playBtn.hidden = !!playing;
+      if (pauseBtn) pauseBtn.hidden = !playing;
+      if (status) status.textContent = playing ? "Playing" : "Paused";
+    }
+
+    function postToGameFrame(runId, action) {
+      const iframe = document.querySelector(`iframe.game-frame[data-run-id="${runId}"]`);
+      if (!iframe || !iframe.contentWindow) return;
+      try {
+        iframe.contentWindow.postMessage({ type: "bench-game", action }, "*");
+      } catch (err) {
+        /* ignore */
+      }
+    }
+
+    function bindGamePreviewControls() {
+      document.querySelectorAll(".game-play-btn").forEach((btn) => {
+        btn.onclick = () => {
+          const id = btn.dataset.runId;
+          postToGameFrame(id, "play");
+          setGameControlUi(id, true);
+        };
+      });
+      document.querySelectorAll(".game-pause-btn").forEach((btn) => {
+        btn.onclick = () => {
+          const id = btn.dataset.runId;
+          postToGameFrame(id, "pause");
+          setGameControlUi(id, false);
+        };
+      });
+      document.querySelectorAll("iframe.game-frame").forEach((iframe) => {
+        iframe.addEventListener("load", () => {
+          // Games boot paused; keep parent controls in sync
+          const id = iframe.dataset.runId;
+          setGameControlUi(id, false);
+          // Nudge status after inject finishes
+          setTimeout(() => postToGameFrame(id, "status"), 50);
+        });
+      });
+    }
+
+    // Keep card Play/Pause labels synced when controls inside the iframe are used
+    if (!window.__benchGameMessageBound) {
+      window.__benchGameMessageBound = true;
+      window.addEventListener("message", (ev) => {
+        const data = ev && ev.data;
+        if (!data || data.type !== "bench-game") return;
+        if (data.action !== "playing" && data.action !== "paused") return;
+        const frames = document.querySelectorAll("iframe.game-frame");
+        frames.forEach((iframe) => {
+          if (iframe.contentWindow === ev.source) {
+            setGameControlUi(iframe.dataset.runId, data.action === "playing");
+          }
+        });
+      });
+    }
+
+    function bindHtmlBenchmarkEvents(task) {
+      const goto = $("goto-settings");
+      if (goto) goto.onclick = () => goTab("settings");
+
+      const openCreate = $("open-create-test");
+      if (openCreate) {
+        openCreate.onclick = () => {
+          if ((task.kind || "") === "text" && !state.instructions.length) {
+            loadInstructions()
+              .then(() => openCreateTestModal(task))
+              .catch(() => openCreateTestModal(task));
+          } else {
+            openCreateTestModal(task);
+          }
+        };
+      }
+
+      // Prefetch model catalogue in the background
+      if (state.settings.openrouter_configured) {
+        ensureOpenrouterModels().catch(() => {});
+      }
+
+      bindResultsEvents(task);
+    }
+
+    function bindResultsEvents(task) {
+      const refresh = $("refresh-runs");
+      if (refresh) {
+        refresh.onclick = () => loadRunsForActive({ patch: true }).catch((e) => toast(e.message, true));
+      }
+
+      const backfill = $("backfill-costs");
+      if (backfill) {
+        backfill.onclick = async () => {
+          try {
+            backfill.disabled = true;
+            backfill.textContent = "Backfilling…";
+            const data = await api("/api/runs/backfill-costs", {
+              method: "POST",
+              body: "{}",
+            });
+            await loadRunsForActive({ patch: true });
+            await loadLeaderboard().catch(() => {});
+            toast(
+              data.updated
+                ? `Backfilled cost on ${data.updated} run(s)`
+                : "No runs needed cost backfill"
+            );
+          } catch (err) {
+            toast(err.message, true);
+          } finally {
+            const btn = $("backfill-costs");
+            if (btn) {
+              btn.disabled = false;
+              btn.textContent = "Backfill costs";
+            }
+          }
+        };
+      }
+
+      document.querySelectorAll(".stop-batch-btn").forEach((btn) => {
+        btn.onclick = async () => {
+          const key = btn.dataset.batchKey;
+          const live = state.runs.filter((r) =>
+            r.task_id === task.id &&
+            runBatchKey(r) === key &&
+            ["pending", "running", "rendering"].includes(r.status)
+          );
+          if (!live.length) return;
+          try {
+            btn.disabled = true;
+            btn.textContent = "Stopping…";
+            await Promise.all(live.map((r) =>
+              api(`/api/runs/${r.id}/stop`, { method: "POST", body: "{}" }).catch(() => {})
+            ));
+            toast(`Stopped ${live.length} run(s)`);
+            await loadRunsForActive({ patch: true });
+          } catch (err) {
+            toast(err.message, true);
+          }
+        };
+      });
+
+      document.querySelectorAll(".add-model-btn").forEach((btn) => {
+        btn.onclick = () => {
+          openAddModelModal(task, {
+            batchKey: btn.dataset.batchKey || "",
+            sourceRunId: btn.dataset.sourceRunId,
+            batchId: btn.dataset.batchId || "",
+          });
+        };
+      });
+
+      document.querySelectorAll(".prompt-more-btn").forEach((btn) => {
+        btn.onclick = () => {
+          const wrap = btn.closest(".test-batch-prompt-wrap");
+          const el = wrap && wrap.querySelector(".test-batch-prompt");
+          if (!el) return;
+          const expanded = btn.dataset.expanded === "1";
+          if (expanded) {
+            el.textContent = el.dataset.short || "";
+            btn.dataset.expanded = "0";
+            btn.setAttribute("aria-expanded", "false");
+            btn.textContent = "More";
+          } else {
+            el.textContent = el.dataset.full || "";
+            btn.dataset.expanded = "1";
+            btn.setAttribute("aria-expanded", "true");
+            btn.textContent = "Less";
+          }
+        };
+      });
+
+      bindGamePreviewControls();
+
+      document.querySelectorAll(".view-btn").forEach((btn) => {
+        btn.onclick = () => {
+          const card = btn.closest(".result-card");
+          if (!card) return;
+          const view = btn.dataset.view;
+          card.classList.toggle("show-source", view === "source");
+          card.querySelectorAll(".view-btn").forEach((b) => {
+            b.classList.toggle("active", b.dataset.view === view);
+          });
+        };
+      });
+
+      document.querySelectorAll(".score-btn").forEach((btn) => {
+        btn.onclick = async () => {
+          const id = Number(btn.dataset.id);
+          const scoreEl = document.querySelector(`.score-input[data-id="${id}"]`);
+          const notesEl = document.querySelector(`.score-notes[data-id="${id}"]`);
+          try {
+            await api(`/api/runs/${id}/score`, {
+              method: "POST",
+              body: JSON.stringify({
+                score: Number(scoreEl.value),
+                score_notes: notesEl.value,
+              }),
+            });
+            toast("Score saved");
+            await loadRunsForActive({ patch: true });
+            await loadLeaderboard();
+          } catch (err) {
+            toast(err.message, true);
+          }
+        };
+      });
+
+      async function stopOne(id) {
+        await api(`/api/runs/${id}/stop`, { method: "POST", body: "{}" });
+      }
+
+      document.querySelectorAll(".stop-run-btn").forEach((btn) => {
+        btn.onclick = async () => {
+          try {
+            btn.disabled = true;
+            btn.textContent = "Stopping…";
+            await stopOne(Number(btn.dataset.id));
+            toast("Stopped");
+            await loadRunsForActive({ patch: true });
+          } catch (err) {
+            btn.disabled = false;
+            btn.textContent = "Stop";
+            toast(err.message, true);
+          }
+        };
+      });
+
+      document.querySelectorAll(".rerun-btn").forEach((btn) => {
+        btn.onclick = async () => {
+          try {
+            await api(`/api/runs/${btn.dataset.id}/rerun`, { method: "POST", body: "{}" });
+            toast("Re-run started");
+            await loadRunsForActive({ patch: true });
+            startPolling();
+          } catch (err) {
+            toast(err.message, true);
+          }
+        };
+      });
+
+      document.querySelectorAll(".delete-run-btn").forEach((btn) => {
+        btn.onclick = async () => {
+          const id = Number(btn.dataset.id);
+          if (!confirm("Delete this result permanently?")) return;
+          try {
+            btn.disabled = true;
+            await api(`/api/runs/${id}`, { method: "DELETE" });
+            state.runs = state.runs.filter((r) => r.id !== id);
+            toast("Result deleted");
+            await loadRunsForActive({ patch: true });
+            await loadLeaderboard().catch(() => {});
+          } catch (err) {
+            btn.disabled = false;
+            toast(err.message, true);
+          }
+        };
+      });
+
+      document.querySelectorAll(".replay-draw-btn").forEach((btn) => {
+        btn.onclick = () => replayDraw(Number(btn.dataset.id));
+      });
+
+      applyDrawSrcdocs(state.runs.filter((r) => r.task_id === task.id));
+      applyPenCanvases(state.runs.filter((r) => r.task_id === task.id));
+    }
+
+    async function checkHealth() {
+      try {
+        const h = await api("/api/health");
+        state.settings = {
+          openrouter_configured: !!h.openrouter_configured,
+          openrouter_key_source: h.openrouter_key_source || "none",
+          openrouter_key_masked: h.openrouter_key_masked || "",
+        };
+        updateHealthPill();
+      } catch {
+        $("health-dot").classList.remove("ok");
+        $("health-text").textContent = "offline";
+      }
+    }
+
+    async function loadSettings() {
+      const data = await api("/api/settings");
+      state.settings = data.settings || state.settings;
+      updateHealthPill();
+      if (state.activeTab === "settings") renderMain();
+    }
+
+    async function loadTasks() {
+      const data = await api("/api/tasks");
+      state.tasks = data.tasks || [];
+      if (
+        state.activeTab !== "leaderboard" &&
+        state.activeTab !== "settings" &&
+        state.activeTab !== "new-models"
+      ) {
+        if (!state.tasks.some((t) => t.id === state.activeTab)) {
+          state.activeTab = "leaderboard";
+        }
+      }
+      renderTabs();
+    }
+
+    async function loadModels() {
+      const data = await api("/api/models");
+      state.models = data.models || [];
+    }
+
+    async function loadInstructions() {
+      const data = await api("/api/instructions");
+      state.instructions = data.instructions || [];
+      // Keep selection in sync with catalogue; default to first skill when unset
+      if (
+        state.instructions.length &&
+        (state.selectedInstructionId == null || state.selectedInstructionId === "")
+      ) {
+        applySelectedInstruction(state.instructions[0].id);
+      } else if (state.selectedInstructionId != null) {
+        const still = state.instructions.find(
+          (i) => String(i.id) === String(state.selectedInstructionId)
+        );
+        if (still) applySelectedInstruction(still.id);
+        else applySelectedInstruction(state.instructions[0]?.id ?? null);
+      }
+    }
+
+    async function loadOpenrouterModels(force = false) {
+      // Coalesce concurrent loads so callers can await the same promise
+      if (state.openrouterModelsPromise) {
+        if (!force) return state.openrouterModelsPromise;
+        // Wait for in-flight load, then force a fresh fetch
+        try { await state.openrouterModelsPromise; } catch { /* ignore */ }
+      }
+      if (state.openrouterModels.length && !force) {
+        return state.openrouterModels;
+      }
+
+      state.openrouterModelsLoading = true;
+      state.openrouterModelsError = "";
+
+      const job = (async () => {
+        try {
+          const q = force ? `?refresh=1&t=${Date.now()}` : "";
+          const data = await api("/api/openrouter/models" + q);
+          state.openrouterModels = Array.isArray(data.models) ? data.models : [];
+          if (data.error && !state.openrouterModels.length) {
+            state.openrouterModelsError = data.error;
+          }
+          if (!state.openrouterModels.length && !state.openrouterModelsError) {
+            state.openrouterModelsError = "No models returned from OpenRouter";
+          }
+          return state.openrouterModels;
+        } catch (err) {
+          state.openrouterModelsError = err.message || "Failed to load models";
+          throw err;
+        } finally {
+          state.openrouterModelsLoading = false;
+          if (state.openrouterModelsPromise === job) {
+            state.openrouterModelsPromise = null;
+          }
+        }
+      })();
+
+      state.openrouterModelsPromise = job;
+      return job;
+    }
+
+    async function ensureOpenrouterModels(force = false) {
+      try {
+        await loadOpenrouterModels(force);
+      } catch {
+        // error string already stored on state
+      }
+      return state.openrouterModels;
+    }
+
+    function formatElapsed(iso) {
+      if (!iso) return "";
+      const start = Date.parse(iso);
+      if (Number.isNaN(start)) return "";
+      const sec = Math.max(0, Math.round((Date.now() - start) / 1000));
+      if (sec < 60) return `${sec}s`;
+      return `${Math.floor(sec / 60)}m ${sec % 60}s`;
+    }
+
+    function humanizeProviderName(provider) {
+      const key = String(provider || "").trim().toLowerCase();
+      const map = {
+        openai: "OpenAI",
+        anthropic: "Anthropic",
+        google: "Google",
+        "google-ai": "Google",
+        deepseek: "Deepseek",
+        meta: "Meta",
+        "meta-llama": "Meta",
+        mistralai: "Mistral",
+        mistral: "Mistral",
+        qwen: "Qwen",
+        "x-ai": "xAI",
+        xai: "xAI",
+        cohere: "Cohere",
+        perplexity: "Perplexity",
+        moonshotai: "Moonshot",
+        moonshot: "Moonshot",
+        zhipu: "Zhipu",
+        "z-ai": "Zhipu",
+        amazon: "Amazon",
+        microsoft: "Microsoft",
+        nvidia: "NVIDIA",
+      };
+      if (map[key]) return map[key];
+      if (!key) return "";
+      return key.charAt(0).toUpperCase() + key.slice(1);
+    }
+
+    function humanizeModelSlug(slug) {
+      const raw = String(slug || "").trim().replace(/^~+/, "");
+      if (!raw) return "";
+      const parts = raw
+        .replace(/_/g, "-")
+        .split(/[-/:]+/)
+        .filter(Boolean);
+      if (!parts.length) return raw;
+      return parts
+        .map((part, i) => {
+          if (/^\d+(\.\d+)*$/.test(part)) return part;
+          if (/^v\d/i.test(part)) return part.toLowerCase();
+          const lower = part.toLowerCase();
+          if (i === 0) return lower.charAt(0).toUpperCase() + lower.slice(1);
+          return lower;
+        })
+        .join(" ");
+    }
+
+    /** Readable card labels: title = model name, provider = org line under it. */
+    function formatModelPresentation(openrouterId, displayName) {
+      const id = String(openrouterId || displayName || "").replace(/^~+/, "").trim();
+      let provider = "";
+      let slug = id;
+      if (id.includes("/")) {
+        const idx = id.indexOf("/");
+        provider = id.slice(0, idx);
+        slug = id.slice(idx + 1);
+      }
+      const dn = String(displayName || "").trim();
+      const dnLooksLikeId =
+        !dn ||
+        dn === openrouterId ||
+        dn.replace(/^~+/, "") === id ||
+        dn.includes("/");
+      const title = dnLooksLikeId
+        ? humanizeModelSlug(slug || id) || id
+        : dn;
+      const providerLabel = humanizeProviderName(provider) ||
+        (title ? title.split(/\s+/)[0] : "");
+      return {
+        title: title || id || "Model",
+        provider: providerLabel,
+      };
+    }
+
+    function drawWaitMessage(r, copy) {
+      const elapsed = formatElapsed(r.created_at);
+      const phase = r.stream_phase || "";
+      let line = copy.waiting;
+      if (phase === "thinking") line = "Working — model is thinking before it draws";
+      else if (phase === "connecting") line = "Connecting to OpenRouter…";
+      else if (phase === "drawing") line = "Drawing…";
+      return elapsed ? `${line} · ${elapsed}` : line;
+    }
+
+    function drawActivityMeta(r) {
+      const bits = [];
+      if (r.stream_phase) bits.push(r.stream_phase);
+      if (r.stream_heartbeats) bits.push(`${r.stream_heartbeats} stream pings`);
+      if (r.stream_reasoning_chars) bits.push(`${r.stream_reasoning_chars} thought chars`);
+      if (r.output_text) bits.push(`${r.output_text.length} output chars`);
+      const est = r.est_cost_usd != null ? formatRunCost(r.est_cost_usd) : formatRunCost(r.cost_usd);
+      const cap = r.cost_limit_usd != null ? formatRunCost(r.cost_limit_usd) : formatRunCost(state.settings.cost_limit_usd);
+      if (est && cap) bits.push(`${est} / cap ${cap}`);
+      else if (est) bits.push(`est ${est}`);
+      else if (cap) bits.push(`cap ${cap}`);
+      return bits.join(" · ");
+    }
+
+    function thoughtsLookLikePen(text) {
+      if (!text) return false;
+      const hits = text.match(/\b(DOWN|TO|UP|END)\b|\b\d{1,4}\s+\d{1,4}\s+[01]\b/gi);
+      return !!(hits && hits.length >= 3);
+    }
+
+    function renderDrawWaitHtml(r, copy) {
+      const thought = (r.reasoning_preview || "").trim();
+      const hideThoughts = !!(r.pen_commands && r.pen_commands.length) || thoughtsLookLikePen(thought);
+      return renderRunLoadingHtml(drawWaitMessage(r, copy), {
+        size: "tall",
+        meta: drawActivityMeta(r) || "No stream activity yet",
+        extraHtml: !hideThoughts && thought
+          ? `<pre class="think-preview">${escapeHtml(thought)}</pre>`
+          : "",
+      });
+    }
+
+    function createInkPlayer(canvas) {
+      const ctx = canvas.getContext("2d");
+      const ink = {
+        strokes: [],
+        queue: [],
+        applied: 0,
+        pen: { x: 512, y: 512, down: false, visible: false },
+        moving: null,
+        raf: 0,
+        lastTs: 0,
+        speed: 720,
+      };
+
+      function paper() {
+        ctx.save();
+        ctx.fillStyle = "#fbf7ef";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = "rgba(30, 24, 16, 0.04)";
+        ctx.lineWidth = 1;
+        for (let i = 64; i < 1024; i += 64) {
+          ctx.beginPath();
+          ctx.moveTo(i, 0);
+          ctx.lineTo(i, 1024);
+          ctx.moveTo(0, i);
+          ctx.lineTo(1024, i);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawStrokes() {
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = "#1c1915";
+        ctx.lineWidth = 3.2;
+        for (const stroke of ink.strokes) {
+          if (!stroke.length) continue;
+          ctx.beginPath();
+          ctx.moveTo(stroke[0].x, stroke[0].y);
+          for (let i = 1; i < stroke.length; i++) ctx.lineTo(stroke[i].x, stroke[i].y);
+          ctx.stroke();
+        }
+      }
+
+      function drawPen() {
+        if (!ink.pen.visible) return;
+        const { x, y, down } = ink.pen;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(-0.55);
+        ctx.fillStyle = down ? "#1c1915" : "rgba(28,25,21,0.35)";
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(7, -28);
+        ctx.lineTo(13, -26);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.fillStyle = down ? "#c0353a" : "#8b8f99";
+        ctx.arc(0, 0, down ? 3.4 : 2.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function redraw() {
+        paper();
+        drawStrokes();
+        drawPen();
+      }
+
+      function applyCmd(cmd) {
+        if (!cmd) return;
+        if (cmd.op === "up") {
+          ink.pen.down = false;
+          return;
+        }
+        const x = Number(cmd.x);
+        const y = Number(cmd.y);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        if (cmd.op === "down" || !ink.strokes.length || !ink.pen.down) {
+          ink.strokes.push([{ x, y }]);
+          ink.pen.x = x;
+          ink.pen.y = y;
+          ink.pen.down = true;
+          ink.pen.visible = true;
+          return;
+        }
+        const last = ink.strokes[ink.strokes.length - 1];
+        last.push({ x, y });
+        ink.pen.x = x;
+        ink.pen.y = y;
+        ink.pen.down = true;
+        ink.pen.visible = true;
+      }
+
+      function tick(ts) {
+        if (!ink.lastTs) ink.lastTs = ts;
+        let budget = ((ts - ink.lastTs) / 1000) * ink.speed;
+        ink.lastTs = ts;
+        while (budget > 0) {
+          if (!ink.moving) {
+            const next = ink.queue.shift();
+            if (!next) break;
+            if (next.op === "up") {
+              applyCmd(next);
+              continue;
+            }
+            const tx = Number(next.x);
+            const ty = Number(next.y);
+            if (!Number.isFinite(tx) || !Number.isFinite(ty)) continue;
+            if (next.op === "down" || !ink.pen.down) {
+              applyCmd(next);
+              continue;
+            }
+            ink.moving = { x: tx, y: ty };
+          }
+          const dx = ink.moving.x - ink.pen.x;
+          const dy = ink.moving.y - ink.pen.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist <= 1 || dist <= budget) {
+            applyCmd({ op: "to", x: ink.moving.x, y: ink.moving.y });
+            ink.moving = null;
+            budget -= dist;
+          } else {
+            const k = budget / dist;
+            applyCmd({
+              op: "to",
+              x: ink.pen.x + dx * k,
+              y: ink.pen.y + dy * k,
+            });
+            budget = 0;
+          }
+        }
+        redraw();
+        if (ink.queue.length || ink.moving) {
+          ink.raf = requestAnimationFrame(tick);
+        } else {
+          ink.raf = 0;
+          ink.lastTs = 0;
+        }
+      }
+
+      function start() {
+        if (!ink.raf) {
+          ink.lastTs = 0;
+          ink.raf = requestAnimationFrame(tick);
+        }
+      }
+
+      function syncFromCommands(commands) {
+        const cmds = commands || [];
+        for (let i = ink.applied; i < cmds.length; i++) ink.queue.push(cmds[i]);
+        ink.applied = cmds.length;
+        if (ink.queue.length) start();
+        else redraw();
+      }
+
+      function replay(commands) {
+        ink.strokes = [];
+        ink.queue = [];
+        ink.applied = 0;
+        ink.moving = null;
+        ink.pen = { x: 512, y: 512, down: false, visible: false };
+        if (ink.raf) cancelAnimationFrame(ink.raf);
+        ink.raf = 0;
+        ink.speed = 980;
+        syncFromCommands(commands || []);
+        ink.speed = 720;
+      }
+
+      redraw();
+      return { syncFromCommands, replay, redraw };
+    }
+
+    function ensureInkPlayer(card, run) {
+      const id = Number(run.id);
+      let player = state.inkPlayers[id];
+      const canvas = card.querySelector("canvas.ink-canvas");
+      if (player && canvas && player.canvas === canvas && canvas.isConnected) {
+        return player;
+      }
+      if (!canvas) return null;
+      player = createInkPlayer(canvas);
+      player.canvas = canvas;
+      state.inkPlayers[id] = player;
+      return player;
+    }
+
+    function applyPenCanvases(runs) {
+      (runs || []).forEach((r) => {
+        if (!(r.pen_commands && r.pen_commands.length)) return;
+        const card = document.querySelector(`.result-card[data-run-id="${r.id}"]`);
+        if (!card) return;
+        const player = ensureInkPlayer(card, r);
+        if (player) player.syncFromCommands(r.pen_commands);
+      });
+    }
+
+    function endOfTag(text, start) {
+      let quote = null;
+      for (let i = start; i < text.length; i++) {
+        const ch = text[i];
+        if (quote) {
+          if (ch === quote) quote = null;
+        } else if (ch === "'" || ch === '"') {
+          quote = ch;
+        } else if (ch === ">") {
+          return i;
+        }
+      }
+      return -1;
+    }
+
+    function wrapSvgPreview(svg) {
+      const body = svg || '<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"></svg>';
+      return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><style>html,body{margin:0;width:100%;height:100%;background:#fff;overflow:hidden}svg{display:block;width:100%;height:100%}</style></head><body>${body}</body></html>`;
+    }
+
+    function svgFromPreviewHtml(html) {
+      if (!html) return "";
+      const m = String(html).match(/<svg\b[\s\S]*<\/svg>/i);
+      return m ? m[0] : "";
+    }
+
+    function splitSvgChildren(svgText) {
+      const text = svgText || "";
+      const openMatch = text.match(/<svg\b[^>]*>/i);
+      const open = openMatch
+        ? openMatch[0]
+        : '<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">';
+      const innerMatch = text.match(/<svg\b[^>]*>([\s\S]*?)(?:<\/svg>\s*)?$/i);
+      const inner = innerMatch ? innerMatch[1] : "";
+      const kids = [];
+      let pos = 0;
+      while (pos < inner.length) {
+        while (pos < inner.length && /\s/.test(inner[pos])) pos += 1;
+        if (pos >= inner.length) break;
+        if (inner.startsWith("</", pos)) break;
+        if (inner[pos] !== "<") {
+          const nxt = inner.indexOf("<", pos);
+          pos = nxt === -1 ? inner.length : nxt;
+          continue;
+        }
+        const end = endOfTag(inner, pos);
+        if (end === -1) break;
+        const tag = inner.slice(pos, end + 1);
+        const nameM = tag.match(/^<([a-zA-Z][\w:-]*)/);
+        if (!nameM || /\/>\s*$/.test(tag)) {
+          kids.push(tag);
+          pos = end + 1;
+          continue;
+        }
+        const name = nameM[1];
+        let depth = 1;
+        let i = end + 1;
+        let complete = false;
+        while (i < inner.length) {
+          const lt = inner.indexOf("<", i);
+          if (lt === -1) break;
+          const gt = endOfTag(inner, lt);
+          if (gt === -1) break;
+          const t = inner.slice(lt, gt + 1);
+          const tm = t.match(/^<(\/)?([a-zA-Z][\w:-]*)/);
+          if (tm && tm[2].toLowerCase() === name.toLowerCase()) {
+            if (tm[1]) {
+              depth -= 1;
+              if (depth === 0) {
+                kids.push(inner.slice(pos, gt + 1));
+                pos = gt + 1;
+                complete = true;
+                break;
+              }
+            } else if (!/\/>\s*$/.test(t)) {
+              depth += 1;
+            }
+          }
+          i = gt + 1;
+        }
+        if (!complete) break;
+      }
+      return { open, kids };
+    }
+
+    function applyDrawSrcdocs(runs) {
+      (runs || []).forEach((r) => {
+        if (!r.preview_html) return;
+        if (state.replayTimers[r.id]) return;
+        const iframe = document.querySelector(
+          `.result-card[data-run-id="${r.id}"] .draw-frame-wrap iframe`
+        );
+        if (!iframe) return;
+        const len = String(r.preview_html.length);
+        if (iframe.getAttribute("data-srcdoc-len") === len) return;
+        iframe.srcdoc = r.preview_html;
+        iframe.setAttribute("data-srcdoc-len", len);
+      });
+    }
+
+    function ensureDrawIframe(card, run) {
+      let wrap = card.querySelector(".draw-frame-wrap");
+      if (!wrap) {
+        wrap = document.createElement("div");
+        wrap.className = "draw-frame-wrap";
+        wrap.innerHTML = `
+          <span class="draw-live" hidden><span class="pulse"></span><span class="draw-live-label">drawing…</span></span>
+          <iframe sandbox="" referrerpolicy="no-referrer" title="Draw ${escapeAttr(run.model_display_name || "")}"></iframe>`;
+        const empty = card.querySelector(".media-empty");
+        const toggle = card.querySelector(".view-toggle");
+        if (empty) empty.replaceWith(wrap);
+        else if (toggle) toggle.after(wrap);
+        else card.prepend(wrap);
+      }
+      return wrap.querySelector("iframe");
+    }
+
+    function ensureReplayButton(card, run) {
+      const toggle = card.querySelector(".view-toggle");
+      if (!toggle) return;
+      let btn = toggle.querySelector(".replay-draw-btn");
+      const show = run.status === "completed" && !!(run.preview_html || run.has_preview);
+      if (show && !btn) {
+        btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn small replay-draw-btn";
+        btn.dataset.id = String(run.id);
+        btn.textContent = "Replay";
+        btn.onclick = () => replayDraw(run.id);
+        const open = toggle.querySelector("a.btn");
+        if (open) toggle.insertBefore(btn, open);
+        else toggle.appendChild(btn);
+      } else if (!show && btn) {
+        btn.remove();
+      }
+    }
+
+    function patchDrawCards(runs) {
+      runs.forEach((r) => {
+        const card = document.querySelector(`.result-card[data-run-id="${r.id}"]`);
+        if (!card) return;
+        const badge = card.querySelector(".badge");
+        if (badge) {
+          badge.className = `badge ${r.status}`;
+          badge.textContent = r.status;
+        }
+        const err = card.querySelector(".error-line");
+        if (r.error) {
+          if (err) err.textContent = r.error;
+          else {
+            const head = card.querySelector(".result-head");
+            if (head) {
+              const line = document.createElement("div");
+              line.className = "error-line";
+              line.textContent = r.error;
+              head.after(line);
+            }
+          }
+        } else if (err) {
+          err.remove();
+        }
+        const src = card.querySelector("pre.source-view");
+        if (src && r.output_text != null) src.textContent = r.output_text;
+        const busy = ["pending", "running"].includes(r.status);
+        const empty = card.querySelector(".draw-wait");
+        if (empty && !r.preview_html) {
+          const copy = kindCopy("draw");
+          if (r.status === "failed") {
+            empty.innerHTML = `<div class="draw-wait-line">${escapeHtml(r.error ? `Drawing failed: ${r.error}` : "Drawing failed.")}</div>`;
+          } else {
+            const wrap = document.createElement("div");
+            wrap.innerHTML = renderDrawWaitHtml(r, copy);
+            const next = wrap.firstElementChild;
+            if (next) empty.replaceWith(next);
+          }
+        }
+        if (r.preview_html) {
+          const iframe = ensureDrawIframe(card, r);
+          const live = card.querySelector(".draw-live");
+          if (live) live.hidden = !busy;
+          if (!state.replayTimers[r.id]) {
+            const len = String(r.preview_html.length);
+            if (iframe.getAttribute("data-srcdoc-len") !== len) {
+              iframe.srcdoc = r.preview_html;
+              iframe.setAttribute("data-srcdoc-len", len);
+            }
+          }
+        }
+        ensureReplayButton(card, r);
+        const costEl = card.querySelector(".result-head .run-cost-latency")
+          || card.querySelector(".result-head .score")
+          || card.querySelector(".result-head .tiny");
+        const costLabel = formatRunCost(r.cost_usd);
+        const latencyLabel = formatLatencySeconds(r.latency_ms);
+        if (costEl && (costLabel || latencyLabel)) {
+          costEl.className = "score run-cost-latency";
+          costEl.style.marginTop = "6px";
+          costEl.style.fontSize = "0.95rem";
+          const bits = [];
+          if (costLabel) bits.push(costLabel);
+          if (latencyLabel) bits.push(latencyLabel);
+          costEl.textContent = bits.join(" · ");
+        }
+      });
+    }
+
+    function ensureInkFrame(card, run) {
+      let wrap = card.querySelector(".ink-frame-wrap");
+      if (wrap) return wrap;
+      wrap = document.createElement("div");
+      wrap.className = "ink-frame-wrap";
+      wrap.innerHTML = `
+        <span class="draw-live" hidden><span class="pulse"></span><span class="draw-live-label">sketching…</span></span>
+        <canvas class="ink-canvas" width="1024" height="1024" aria-label="Pen drawing"></canvas>`;
+      const empty = card.querySelector(".media-empty");
+      const toggle = card.querySelector(".view-toggle");
+      if (empty) empty.replaceWith(wrap);
+      else if (toggle) toggle.after(wrap);
+      return wrap;
+    }
+
+    function patchPenCards(runs) {
+      runs.forEach((r) => {
+        const card = document.querySelector(`.result-card[data-run-id="${r.id}"]`);
+        if (!card) return;
+        const badge = card.querySelector(".badge");
+        if (badge) {
+          badge.className = `badge ${r.status}`;
+          badge.textContent = r.status;
+        }
+        const src = card.querySelector("pre.source-view");
+        if (src && r.output_text != null) src.textContent = r.output_text;
+        const busy = ["pending", "running"].includes(r.status);
+        const cmds = r.pen_commands || [];
+        if (cmds.length) {
+          const wrap = ensureInkFrame(card, r);
+          const live = wrap.querySelector(".draw-live");
+          if (live) live.hidden = !busy;
+          const player = ensureInkPlayer(card, r);
+          if (player) player.syncFromCommands(cmds);
+        } else {
+          const empty = card.querySelector(".draw-wait");
+          if (empty) {
+            const wrap = document.createElement("div");
+            wrap.innerHTML = renderDrawWaitHtml(r, kindCopy("pen"));
+            const next = wrap.firstElementChild;
+            if (next) empty.replaceWith(next);
+          }
+        }
+        ensureReplayButton(card, { ...r, preview_html: cmds.length ? "1" : "", has_preview: !!cmds.length });
+      });
+    }
+
+    function replayDraw(runId) {
+      const run = state.runs.find((r) => Number(r.id) === Number(runId));
+      const card = document.querySelector(`.result-card[data-run-id="${runId}"]`);
+      if (!run || !card) return;
+      if ((run.task_kind || "") === "pen" || (run.pen_commands && run.pen_commands.length)) {
+        ensureInkFrame(card, run);
+        const player = ensureInkPlayer(card, run);
+        if (!player || !(run.pen_commands || []).length) {
+          toast("Nothing to replay yet");
+          return;
+        }
+        player.replay(run.pen_commands);
+        return;
+      }
+      const svg = svgFromPreviewHtml(run.preview_html) || (run.output_text || "");
+      const { open, kids } = splitSvgChildren(svg);
+      if (!kids.length) {
+        toast("Nothing to replay yet");
+        return;
+      }
+      if (state.replayTimers[runId]) {
+        clearTimeout(state.replayTimers[runId]);
+        delete state.replayTimers[runId];
+      }
+      const iframe = ensureDrawIframe(card, run);
+      let i = 0;
+      iframe.srcdoc = wrapSvgPreview(`${open}</svg>`);
+      iframe.setAttribute("data-srcdoc-len", "replay");
+      const tick = () => {
+        if (!iframe.isConnected) {
+          delete state.replayTimers[runId];
+          return;
+        }
+        i += 1;
+        iframe.srcdoc = wrapSvgPreview(`${open}${kids.slice(0, i).join("")}</svg>`);
+        if (i < kids.length) {
+          state.replayTimers[runId] = setTimeout(tick, 50);
+        } else {
+          delete state.replayTimers[runId];
+          iframe.setAttribute("data-srcdoc-len", String((run.preview_html || "").length));
+          iframe.srcdoc = run.preview_html || wrapSvgPreview(`${open}${kids.join("")}</svg>`);
+        }
+      };
+      state.replayTimers[runId] = setTimeout(tick, 80);
+    }
+
+    async function loadRunsForActive(opts = {}) {
+      if (
+        state.activeTab === "leaderboard" ||
+        state.activeTab === "settings" ||
+        state.activeTab === "new-models"
+      ) return;
+      const data = await api(`/api/runs?task_id=${state.activeTab}&limit=100`);
+      const others = state.runs.filter((r) => r.task_id !== state.activeTab);
+      const incoming = data.runs || [];
+      state.runs = [...incoming, ...others];
+      const task = state.tasks.find((t) => t.id === state.activeTab);
+      const existing = [...document.querySelectorAll(".result-card[data-run-id]")].map(
+        (c) => Number(c.dataset.runId)
+      );
+      const incomingIds = incoming.map((r) => Number(r.id));
+      // Prefer in-place updates so Setup (prompt / model search) is never wiped mid-edit.
+      const canPatchLive =
+        !!opts.patch &&
+        task &&
+        (task.kind === "draw" || task.kind === "pen") &&
+        existing.length > 0 &&
+        existing.join(",") === incomingIds.join(",");
+      if (canPatchLive) {
+        if (task.kind === "pen") patchPenCards(incoming);
+        else patchDrawCards(incoming);
+      } else if (task && isPromptKind(task.kind || "html") && patchBenchmarkResults(task)) {
+        // results section only
+      } else {
+        renderMain();
+      }
+      const busy = incoming.some((r) =>
+        r.status === "pending" || r.status === "running" || r.status === "rendering"
+      );
+      if (busy) startPolling();
+      else stopPolling();
+    }
+
+    async function loadLeaderboard() {
+      const data = await api("/api/leaderboard");
+      state.leaderboard = data.leaderboard || [];
+      if (state.activeTab === "leaderboard") renderMain();
+    }
+
+    function startPolling() {
+      const task = state.tasks.find((t) => t.id === state.activeTab);
+      const ms = task && (task.kind === "draw" || task.kind === "pen") ? 400 : 2500;
+      if (state.pollTimer && state.pollMs === ms) return;
+      stopPolling();
+      state.pollMs = ms;
+      state.pollTimer = setInterval(() => {
+        if (
+          state.activeTab !== "leaderboard" &&
+          state.activeTab !== "settings" &&
+          state.activeTab !== "new-models"
+        ) {
+          loadRunsForActive({ patch: true }).catch(() => {});
+        }
+      }, ms);
+    }
+
+    function stopPolling() {
+      if (state.pollTimer) {
+        clearInterval(state.pollTimer);
+        state.pollTimer = null;
+      }
+      state.pollMs = 0;
+    }
+
+    async function init() {
+      await checkHealth();
+      await loadTasks();
+      await loadModels();
+      await loadInstructions().catch(() => {});
+      // If no key yet, land on Settings; otherwise open a benchmark
+      if (!state.settings.openrouter_configured) {
+        state.activeTab = "settings";
+        renderTabs();
+        renderMain();
+        return;
+      }
+      const firstBench =
+        state.tasks.find((t) => t.kind === "text") ||
+        state.tasks.find((t) => t.kind === "html") ||
+        state.tasks.find((t) => t.kind === "remotion") ||
+        state.tasks[0];
+      if (firstBench) {
+        state.activeTab = firstBench.id;
+        renderTabs();
+        ensureOpenrouterModels().catch(() => {});
+        await loadRunsForActive();
+      } else {
+        ensureOpenrouterModels().catch(() => {});
+        await loadLeaderboard();
+        renderMain();
+      }
+    }
+
+    bindSkillModalEvents();
+    bindCreateTestModalEvents();
+    bindAddModelModalEvents();
+    init().catch((e) => toast(e.message, true));
+  </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Bench Marker · Strudel render</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 24px; color: #222; }
+    #status { white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>Strudel offline renderer</h1>
+  <p>Internal page used by Bench Marker to turn model code into audio.</p>
+  <div id="status">loading…</div>
+  <script src="./bundle.js"></script>
+  <script>
+    (async () => {
+      const el = document.getElementById('status');
+      try {
+        const api = window.BenchStrudel || window.BenchStrudelBundle?.default || window.BenchStrudelBundle;
+        if (!api || !api.init) {
+          el.textContent = 'ERROR: BenchStrudel API missing after bundle load';
+          window.__benchStrudelReady = false;
+          window.__benchStrudelError = 'API missing';
+          return;
+        }
+        window.BenchStrudel = api;
+        const res = await api.init();
+        window.__benchStrudelReady = !!res.ok;
+        window.__benchStrudelError = res.ok ? null : (res.error || 'init failed');
+        el.textContent = res.ok
+          ? 'ready' + (res.sampleWarnings?.length ? `\nwarnings:\n${res.sampleWarnings.join('\n')}` : '')
+          : `init failed: ${res.error}`;
+      } catch (err) {
+        window.__benchStrudelReady = false;
+        window.__benchStrudelError = String(err?.message || err);
+        el.textContent = 'ERROR: ' + window.__benchStrudelError;
+      }
+    })();
+  </script>
+</body>
+</html>
