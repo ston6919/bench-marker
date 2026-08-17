@@ -710,37 +710,6 @@ def seed_defaults() -> None:
             if task.get("kind") == "strudel" and task.get("name") == "Strudel song → MP3":
                 update_task(int(task["id"]), system_prompt=STRUDEL_SYSTEM_PROMPT)
 
-    # Seed a couple of reusable instructions if library is empty
-    if not list_instructions():
-        create_instruction(
-            name="Short-form script writing",
-            notes="Skill-style instruction for spoken short-form scripts",
-            body=(
-                "You write short-form video scripts for an AI education creator.\n"
-                "Rules:\n"
-                "- Output only the words to be spoken (no stage directions, no titles)\n"
-                "- 45–70 seconds when read aloud at a natural pace\n"
-                "- Hook in the first sentence\n"
-                "- Concrete and specific; avoid fluff and buzzwords\n"
-                "- End with a clear takeaway or soft CTA\n"
-                "- Write in a confident, conversational voice"
-            ),
-        )
-        create_instruction(
-            name="Cold email rewrite",
-            notes="B2B outreach rewrite skill",
-            body=(
-                "You rewrite rough outreach drafts into short, personal B2B cold emails.\n"
-                "Rules:\n"
-                "- Under 120 words\n"
-                "- No fluff, no buzzwords, one clear ask\n"
-                "- Sound human, not salesy\n"
-                "- Specific to the recipient context given in the prompt\n"
-                "- Return only the final email body"
-            ),
-        )
-
-
 def build_html_user_prompt(brief: str) -> str:
     """Wrap the user's brief with format rules models must follow."""
     brief = (brief or "").strip()
