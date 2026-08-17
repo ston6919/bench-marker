@@ -216,9 +216,13 @@ def _safe_float(value: Any) -> float | None:
     if value is None or value == "":
         return None
     try:
-        return float(value)
+        n = float(value)
     except (TypeError, ValueError):
         return None
+    # NaN / Inf become invalid JSON for browsers (JSON.parse rejects them).
+    if n != n or n in (float("inf"), float("-inf")):
+        return None
+    return n
 
 
 def mask_key(key: str) -> str:
@@ -250,7 +254,8 @@ def json_response(
     status: int,
     payload: Any,
 ) -> None:
-    body = json.dumps(payload, default=str).encode("utf-8")
+    # allow_nan=False so we never emit NaN/Infinity (invalid in browser JSON.parse).
+    body = json.dumps(payload, default=str, allow_nan=False).encode("utf-8")
     handler.send_response(status)
     handler.send_header("Content-Type", "application/json; charset=utf-8")
     handler.send_header("Content-Length", str(len(body)))
@@ -1233,6 +1238,17 @@ class Handler(SimpleHTTPRequestHandler):
                 for run in runs:
                     item = dict(run)
                     rid = int(item["id"])
+                    # List payloads are polled often. Drop fields the list UI does not
+                    # need; full details remain on GET /api/runs/:id (Source tab).
+                    item.pop("raw_response", None)
+                    kind = (item.get("task_kind") or "").lower()
+                    out = item.get("output_text") or ""
+                    item["has_output"] = bool(str(out).strip())
+                    # HTML/game previews use /preview; remotion/strudel/image use media
+                    # URLs. Omit large source blobs from the list to keep JSON small
+                    # and browser-parseable under polling.
+                    if kind in ("html", "game", "remotion", "strudel", "image"):
+                        item["output_text"] = ""
                     video_file = remotion_render.video_path_for_run(rid)
                     image_file = html_image_render.image_path_for_run(rid)
                     audio_file = strudel_render.audio_path_for_run(rid)

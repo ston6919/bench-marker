@@ -1397,6 +1397,11 @@
       flex: 1 1 auto;
     }
 
+    #create-test-status.error {
+      color: var(--bad);
+      font-weight: 600;
+    }
+
     @media (max-width: 700px) {
       .wrap { width: calc(100% - 24px); padding-top: 20px; }
       .panel { padding: 18px; }
@@ -1457,7 +1462,7 @@
       <div id="create-test-body"></div>
       <div class="modal-actions">
         <button type="button" class="btn primary" id="create-test-submit">Create test</button>
-        <span class="tiny" id="create-test-status"></span>
+        <span class="tiny" id="create-test-status" aria-live="polite"></span>
         <span class="spacer"></span>
         <button type="button" class="btn small" id="create-test-close">Cancel</button>
       </div>
@@ -1492,6 +1497,8 @@
       modelFilter: "",
       modelHighlight: 0, // keyboard highlight index in search results
       runs: [],
+      runsRequestSeq: 0,
+      optimisticRunIds: new Set(),
       activeTab: "new-models",
       pollTimer: null,
       pollMs: 0,
@@ -1544,13 +1551,40 @@
     }
 
     async function api(path, opts = {}) {
-      const res = await fetch(url(path), {
-        headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
-        ...opts,
-      });
+      const headers = {
+        Accept: "application/json",
+        ...(opts.headers || {}),
+      };
+      // Only set JSON content-type when we actually send a body.
+      if (opts.body != null && headers["Content-Type"] == null && headers["content-type"] == null) {
+        headers["Content-Type"] = "application/json";
+      }
+      const { headers: _ignored, ...rest } = opts;
+      const res = await fetch(url(path), { ...rest, headers });
+      const text = await res.text();
       let data = null;
-      try { data = await res.json(); } catch { data = {}; }
-      if (!res.ok) throw new Error(data.error || res.statusText || "Request failed");
+      if (text && text.trim()) {
+        try {
+          data = JSON.parse(text);
+        } catch (err) {
+          const snippet = text.replace(/\s+/g, " ").slice(0, 160);
+          throw new Error(
+            `Invalid JSON from ${path} (HTTP ${res.status}): ${snippet || err.message}`
+          );
+        }
+      } else {
+        data = {};
+      }
+      if (!res.ok) {
+        const msg =
+          (data && typeof data === "object" && data.error) ||
+          res.statusText ||
+          `Request failed (${res.status})`;
+        throw new Error(msg);
+      }
+      if (data == null || typeof data !== "object") {
+        throw new Error(`Unexpected JSON payload from ${path}`);
+      }
       return data;
     }
 
@@ -1586,6 +1620,11 @@
         state.activeTab = key;
       } else {
         state.activeTab = Number(key);
+      }
+      try {
+        localStorage.setItem("bench-marker.active-tab", String(state.activeTab));
+      } catch {
+        // Browsers may block storage; navigation should still work normally.
       }
       renderTabs();
       renderMain();
@@ -2412,7 +2451,7 @@
       const kind = task.kind || "html";
       const copy = kindCopy(kind);
       const runs = state.runs
-        .filter((r) => r.task_id === task.id)
+        .filter((r) => Number(r.task_id) === Number(task.id))
         .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
       const needsKey = !state.settings.openrouter_configured;
       const completed = runs.filter((r) => r.status === "completed");
@@ -2498,7 +2537,7 @@
       }
 
       const runs = state.runs
-        .filter((r) => r.task_id === task.id)
+        .filter((r) => Number(r.task_id) === Number(task.id))
         .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
 
       host.innerHTML = renderResultsSectionInner(task, runs);
@@ -2575,7 +2614,10 @@
         };
       }
       const status = $("create-test-status");
-      if (status) status.textContent = "";
+      if (status) {
+        status.textContent = "";
+        status.classList.remove("error");
+      }
       modal.hidden = false;
       modal.classList.add("open");
       if (state.settings.openrouter_configured) {
@@ -2599,9 +2641,18 @@
     }
 
     async function submitCreateTest() {
+      const status = $("create-test-status");
+      const submitBtn = $("create-test-submit");
+      const showError = (message) => {
+        if (status) {
+          status.textContent = message;
+          status.classList.add("error");
+        }
+        toast(message, true);
+      };
       const task = state.tasks.find((t) => t.id === state.createTestTaskId)
         || state.tasks.find((t) => t.id === state.activeTab);
-      if (!task) return toast("No benchmark selected", true);
+      if (!task) return showError("No benchmark selected");
       if (!state.settings.openrouter_configured) {
         toast("Add your OpenRouter API key in Settings first", true);
         closeCreateTestModal();
@@ -2610,11 +2661,9 @@
       }
       const brief = ($("html-brief")?.value || "").trim();
       const openrouterIds = [...state.selectedOpenrouterIds];
-      if (!openrouterIds.length) return toast("Add at least one model", true);
+      if (!openrouterIds.length) return showError("Add at least one model");
 
       const kind = task.kind || "html";
-      const status = $("create-test-status");
-      const submitBtn = $("create-test-submit");
 
       const payload = {
         task_id: task.id,
@@ -2628,10 +2677,10 @@
         );
         const instruction = (selected?.body || state.instructionBodyDraft || "").trim();
         if (!selected && !instruction) {
-          return toast("Select a skill first (or add one under Manage skills)", true);
+          return showError("Select a skill first (or add one under Manage skills)");
         }
-        if (!instruction) return toast("Selected skill has no instruction text", true);
-        if (!brief) return toast("Enter a user prompt first", true);
+        if (!instruction) return showError("Selected skill has no instruction text");
+        if (!brief) return showError("Enter a user prompt first");
         payload.system_prompt = instruction;
         if (state.selectedInstructionId != null) {
           payload.instruction_id = state.selectedInstructionId;
@@ -2642,23 +2691,40 @@
         state.draftGames[task.id] = game;
         // brief is optional for game maker
       } else if (!brief) {
-        return toast("Enter a brief / prompt first", true);
+        return showError("Enter a brief / prompt first");
       }
 
       try {
-        if (status) status.textContent = "Starting…";
+        if (status) {
+          status.textContent = "Starting…";
+          status.classList.remove("error");
+        }
         if (submitBtn) submitBtn.disabled = true;
         const data = await api("/api/runs", {
           method: "POST",
           body: JSON.stringify(payload),
         });
+        const created = data.runs || [];
+        if (!created.length) {
+          throw new Error("The server did not return any created runs");
+        }
+        const createdIds = new Set(created.map((r) => Number(r.id)));
+        for (const id of createdIds) state.optimisticRunIds.add(id);
+        state.runs = [
+          ...created,
+          ...state.runs.filter((r) => !createdIds.has(Number(r.id))),
+        ];
         toast(`Started test with ${data.count} model${data.count === 1 ? "" : "s"}`);
         closeCreateTestModal();
-        await loadRunsForActive({ patch: true });
+        if (state.activeTab === task.id) {
+          if (!patchBenchmarkResults(task)) renderMain();
+        }
         startPolling();
+        loadRunsForActive({ patch: true }).catch((err) => {
+          toast(`Test started, but refresh failed: ${err.message}`, true);
+        });
       } catch (err) {
-        if (status) status.textContent = "";
-        toast(err.message, true);
+        showError(err.message || "Could not start test");
       } finally {
         if (submitBtn) submitBtn.disabled = false;
       }
@@ -2817,14 +2883,14 @@
       const audioUrl = url(`/api/runs/${r.id}/audio?t=${encodeURIComponent(r.completed_at || r.created_at || "")}`);
       const imageUrl = url(`/api/runs/${r.id}/image?t=${encodeURIComponent(r.completed_at || r.created_at || "")}`);
       const previewUrl = url(`/api/runs/${r.id}/preview?t=${encodeURIComponent(r.completed_at || r.created_at || "")}`);
-      const htmlReady = !isRemotion && !isStrudel && !isText && !isImage && !isDraw && !isPen && r.status === "completed" && (r.output_text || "").trim();
+      const hasTextOut = !!(r.has_output || (r.output_text || "").trim());
+      const htmlReady = !isRemotion && !isStrudel && !isText && !isImage && !isDraw && !isPen && r.status === "completed" && hasTextOut;
       // game uses the same HTML preview path as htmlReady
       const textReady = isText && r.status === "completed" && (r.output_text || "").trim();
       const drawReady = isDraw && !!(r.has_preview || r.preview_html);
       const drawBusy = isDraw && ["pending", "running"].includes(r.status);
       const penReady = isPen && !!(r.has_preview || (r.pen_commands && r.pen_commands.length));
       const penBusy = isPen && ["pending", "running"].includes(r.status);
-      const codeReady = !!(r.output_text || "").trim();
 
       const busy = isRunBusy(r.status);
       const elapsed = formatElapsed(r.created_at);
@@ -2984,12 +3050,16 @@
           ? "MP3"
           : (isImage ? "Image" : (isText ? "Output" : (isPen ? "Sketch" : (isDraw ? "Drawing" : (isGame ? "Game" : "Preview"))))));
       const secondaryLabel = isText ? "Prompt used" : copy.sourceLabel;
+      // Text cards show the prompt snapshot inline (small). Model output / code is
+      // filled lazily on first Source click so list re-renders stay cheap and the
+      // results section is not rebuilt from hundreds of KB of escaped HTML.
       const secondaryBody = isText
         ? [
             r.system_prompt_snapshot ? `// Instruction\n${r.system_prompt_snapshot}` : "",
             r.user_prompt_snapshot ? `// Prompt\n${r.user_prompt_snapshot}` : "",
           ].filter(Boolean).join("\n\n") || "(no snapshot)"
-        : (r.output_text || (codeReady ? "" : "// no output yet"));
+        : "";
+      const lazySource = isText ? "0" : "1";
 
       return `
         <article class="result-card ${busy ? "is-busy" : ""}" data-run-id="${r.id}">
@@ -3024,7 +3094,7 @@
             ${openLink}
           </div>
           ${media}
-          <pre class="source-view">${escapeHtml(secondaryBody)}</pre>
+          <pre class="source-view" data-lazy-source="${lazySource}">${escapeHtml(secondaryBody)}</pre>
           <div class="result-foot">
             <div class="row">
               ${["pending", "running", "rendering"].includes(r.status)
@@ -3689,10 +3759,41 @@
       bindGamePreviewControls();
 
       document.querySelectorAll(".view-btn").forEach((btn) => {
-        btn.onclick = () => {
+        btn.onclick = async () => {
           const card = btn.closest(".result-card");
           if (!card) return;
           const view = btn.dataset.view;
+          if (view === "source") {
+            const src = card.querySelector("pre.source-view");
+            if (src && src.dataset.lazySource === "1" && src.dataset.filled !== "1") {
+              const runId = Number(card.dataset.runId || btn.dataset.id);
+              let run = state.runs.find((r) => Number(r.id) === runId);
+              let body = (run && (run.output_text || "").trim()) ? run.output_text : "";
+              // List endpoint omits large sources; fetch full run on demand.
+              if (!body && run && (run.has_output || run.status === "completed")) {
+                src.textContent = "Loading source…";
+                try {
+                  const data = await api(`/api/runs/${runId}`);
+                  if (data.run) {
+                    run = { ...run, ...data.run };
+                    const idx = state.runs.findIndex((r) => Number(r.id) === runId);
+                    if (idx >= 0) state.runs[idx] = { ...state.runs[idx], ...data.run };
+                    body = data.run.output_text || "";
+                  }
+                } catch (err) {
+                  src.textContent = `// failed to load source: ${err.message || err}`;
+                  src.dataset.filled = "1";
+                  card.classList.add("show-source");
+                  card.querySelectorAll(".view-btn").forEach((b) => {
+                    b.classList.toggle("active", b.dataset.view === view);
+                  });
+                  return;
+                }
+              }
+              src.textContent = body || "// no output yet";
+              src.dataset.filled = "1";
+            }
+          }
           card.classList.toggle("show-source", view === "source");
           card.querySelectorAll(".view-btn").forEach((b) => {
             b.classList.toggle("active", b.dataset.view === view);
@@ -3761,6 +3862,7 @@
           try {
             btn.disabled = true;
             await api(`/api/runs/${id}`, { method: "DELETE" });
+            state.optimisticRunIds.delete(id);
             state.runs = state.runs.filter((r) => r.id !== id);
             toast("Result deleted");
             await loadRunsForActive({ patch: true });
@@ -4517,25 +4619,42 @@
         state.activeTab === "settings" ||
         state.activeTab === "new-models"
       ) return;
-      const data = await api(`/api/runs?task_id=${state.activeTab}&limit=100`);
-      const others = state.runs.filter((r) => r.task_id !== state.activeTab);
-      const incoming = data.runs || [];
-      state.runs = [...incoming, ...others];
-      const task = state.tasks.find((t) => t.id === state.activeTab);
+      const taskId = Number(state.activeTab);
+      if (!Number.isFinite(taskId)) return;
+      const requestSeq = ++state.runsRequestSeq;
+      const data = await api(`/api/runs?task_id=${taskId}&limit=100`);
+      // Coerce both sides so a string tab id cannot discard a successful fetch.
+      if (Number(state.activeTab) !== taskId || requestSeq !== state.runsRequestSeq) return;
+      // Never treat a missing/malformed runs field as "zero results" — that was
+      // wiping the results section after a brief optimistic flash.
+      if (!Array.isArray(data.runs)) {
+        throw new Error("Runs response missing runs array");
+      }
+      const incoming = data.runs;
+      const incomingIds = new Set(incoming.map((r) => Number(r.id)));
+      for (const id of incomingIds) state.optimisticRunIds.delete(id);
+      const unconfirmed = state.runs.filter((r) =>
+        Number(r.task_id) === taskId &&
+        state.optimisticRunIds.has(Number(r.id)) &&
+        !incomingIds.has(Number(r.id))
+      );
+      const others = state.runs.filter((r) => Number(r.task_id) !== taskId);
+      state.runs = [...unconfirmed, ...incoming, ...others];
+      const task = state.tasks.find((t) => Number(t.id) === taskId);
       const existing = [...document.querySelectorAll(".result-card[data-run-id]")].map(
         (c) => Number(c.dataset.runId)
       );
-      const incomingIds = incoming.map((r) => Number(r.id));
+      const visibleIds = [...unconfirmed, ...incoming].map((r) => Number(r.id));
       // Prefer in-place updates so Setup (prompt / model search) is never wiped mid-edit.
       const canPatchLive =
         !!opts.patch &&
         task &&
         (task.kind === "draw" || task.kind === "pen") &&
         existing.length > 0 &&
-        existing.join(",") === incomingIds.join(",");
+        existing.join(",") === visibleIds.join(",");
       if (canPatchLive) {
-        if (task.kind === "pen") patchPenCards(incoming);
-        else patchDrawCards(incoming);
+        if (task.kind === "pen") patchPenCards([...unconfirmed, ...incoming]);
+        else patchDrawCards([...unconfirmed, ...incoming]);
       } else if (task && isPromptKind(task.kind || "html") && patchBenchmarkResults(task)) {
         // results section only
       } else {
@@ -4584,9 +4703,17 @@
         renderMain();
         return;
       }
+      let savedTab = "";
+      try {
+        savedTab = localStorage.getItem("bench-marker.active-tab") || "";
+      } catch {
+        // Fall back to the default benchmark when storage is unavailable.
+      }
+      const savedTask = state.tasks.find((t) => String(t.id) === savedTab);
       const firstBench =
-        state.tasks.find((t) => t.kind === "text") ||
+        savedTask ||
         state.tasks.find((t) => t.kind === "html") ||
+        state.tasks.find((t) => t.kind === "text") ||
         state.tasks.find((t) => t.kind === "remotion") ||
         state.tasks[0];
       if (firstBench) {
