@@ -2531,6 +2531,13 @@
       if (!host || !panel) return false;
       if (String(panel.dataset.taskId) !== String(task.id)) return false;
 
+      // Polling must not replace a media element while the user is playing it.
+      // Recreating the element resets playback every polling interval.
+      const mediaInUse = [...host.querySelectorAll("video, audio")].some((media) =>
+        !media.paused || (media.currentTime > 0 && !media.ended)
+      );
+      if (mediaInUse) return true;
+
       // Keep create-test modal open: only refresh results
       if ($("create-test-modal")?.classList.contains("open")) {
         // still update results underneath

@@ -1738,14 +1738,46 @@ class Handler(SimpleHTTPRequestHandler):
         path = remotion_render.video_path_for_run(run_id)
         if not path.exists():
             return json_response(self, 404, {"error": "video not found"})
-        data = path.read_bytes()
-        self.send_response(200)
+
+        size = path.stat().st_size
+        start, end = 0, size - 1
+        range_header = self.headers.get("Range", "")
+        if range_header.startswith("bytes="):
+            try:
+                requested = range_header[6:].split(",", 1)[0]
+                first, last = requested.split("-", 1)
+                if first:
+                    start = int(first)
+                    end = min(int(last), size - 1) if last else size - 1
+                else:
+                    suffix_length = int(last)
+                    start = max(size - suffix_length, 0)
+                if start < 0 or start > end or start >= size:
+                    raise ValueError
+            except (TypeError, ValueError):
+                self.send_response(416)
+                self.send_header("Content-Range", f"bytes */{size}")
+                self.end_headers()
+                return
+
+        length = end - start + 1
+        self.send_response(206 if range_header.startswith("bytes=") else 200)
         self.send_header("Content-Type", "video/mp4")
-        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Content-Length", str(length))
         self.send_header("Cache-Control", "no-store")
         self.send_header("Accept-Ranges", "bytes")
+        if range_header.startswith("bytes="):
+            self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
         self.end_headers()
-        self.wfile.write(data)
+        with path.open("rb") as video:
+            video.seek(start)
+            remaining = length
+            while remaining:
+                chunk = video.read(min(64 * 1024, remaining))
+                if not chunk:
+                    break
+                self.wfile.write(chunk)
+                remaining -= len(chunk)
 
     def _serve_run_image(self, run_id: int) -> None:
         path = html_image_render.image_path_for_run(run_id)
