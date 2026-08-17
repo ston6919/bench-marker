@@ -1281,11 +1281,6 @@ class Handler(SimpleHTTPRequestHandler):
                 run["audio_url"] = f"/api/runs/{run_id}/audio" if audio_file.exists() else None
                 db.attach_draw_preview(run)
                 return json_response(self, 200, {"run": run})
-            if path == "/api/leaderboard":
-                task_id = int(qs["task_id"][0]) if qs.get("task_id") else None
-                return json_response(
-                    self, 200, {"leaderboard": db.leaderboard(task_id=task_id)}
-                )
             if path == "/api/export":
                 return json_response(self, 200, db.export_snapshot())
             if path == "/api/instructions":

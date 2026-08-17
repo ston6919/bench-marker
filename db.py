@@ -503,48 +503,6 @@ def score_run(run_id: int, score: float, score_notes: str = "") -> dict[str, Any
     )
 
 
-def leaderboard(task_id: int | None = None) -> list[dict[str, Any]]:
-    """Aggregate best/avg scores per model per task."""
-    conn = get_conn()
-    try:
-        params: list[Any] = []
-        task_filter = ""
-        if task_id is not None:
-            task_filter = "AND r.task_id = ?"
-            params.append(task_id)
-        rows = conn.execute(
-            f"""
-            SELECT
-                r.task_id,
-                t.name AS task_name,
-                r.model_id,
-                m.openrouter_id AS model_openrouter_id,
-                m.display_name AS model_display_name,
-                COUNT(r.id) AS run_count,
-                COUNT(r.score) AS scored_count,
-                AVG(r.score) AS avg_score,
-                MAX(r.score) AS best_score,
-                MIN(r.score) AS worst_score,
-                AVG(r.latency_ms) AS avg_latency_ms,
-                SUM(CASE WHEN r.status = 'completed' THEN 1 ELSE 0 END) AS completed_count,
-                SUM(CASE WHEN r.status = 'failed' THEN 1 ELSE 0 END) AS failed_count,
-                SUM(r.cost_usd) AS total_cost_usd,
-                AVG(r.cost_usd) AS avg_cost_usd,
-                MAX(r.scored_at) AS last_scored_at
-            FROM runs r
-            JOIN tasks t ON t.id = r.task_id
-            JOIN models m ON m.id = r.model_id
-            WHERE 1=1 {task_filter}
-            GROUP BY r.task_id, r.model_id
-            ORDER BY t.name ASC, avg_score DESC NULLS LAST, best_score DESC NULLS LAST
-            """,
-            params,
-        ).fetchall()
-        return rows_to_list(rows)
-    finally:
-        conn.close()
-
-
 HTML_SYSTEM_PROMPT = """You are an expert front-end engineer who builds polished, self-contained HTML pages.
 
 Always produce a complete standalone HTML document that works when opened in a browser with no build step.
@@ -2043,7 +2001,6 @@ def export_snapshot() -> dict[str, Any]:
         "models": list_models(),
         "instructions": list_instructions(),
         "runs": list_runs(limit=10_000),
-        "leaderboard": leaderboard(),
     }
 
 

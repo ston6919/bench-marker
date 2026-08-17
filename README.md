@@ -1,8 +1,8 @@
 # Bench Marker
 
 Bench Marker compares OpenRouter models on the tasks you actually care about.
-Define a prompt, run several models against it, score the results, and use the
-leaderboard to see which models perform best for each kind of work.
+Define a prompt, run several models against it, and score the results to compare
+which models perform best for each kind of work.
 
 ## Features
 
@@ -12,7 +12,7 @@ leaderboard to see which models perform best for each kind of work.
 - Square HTML graphics rendered to PNG
 - Strudel compositions rendered to MP3
 - Incremental SVG and pen-command drawing previews
-- Per-run scoring, cost tracking, reruns, cancellation, and leaderboards
+- Per-run scoring, cost tracking, reruns, and cancellation
 - Configurable per-run OpenRouter cost limit
 
 ## Requirements
@@ -51,6 +51,77 @@ Open `http://127.0.0.1:8796/`.
 
 The Strudel bundle is generated during `npm ci`. You can rebuild it with
 `npm run build --prefix strudel-template`.
+
+## Create your own tests
+
+A test is one prompt or creative brief run against one or more models inside a
+built-in benchmark type. You create tests from the browser; you do not need to
+edit source files or write the generated HTML, SVG, Remotion, or Strudel code
+yourself.
+
+### Basic workflow
+
+1. Open **Settings**, add your OpenRouter API key, and set a per-run cost limit.
+2. Open the benchmark tab that matches the output you want, such as **Text +
+   skills** or **Remotion motion graphic**.
+3. Select **Create test**.
+4. Enter the prompt or brief. Text tests also require a reusable skill; game
+   tests ask you to choose a game and accept optional extra instructions.
+5. Search the OpenRouter catalogue and select one or more models.
+6. Select **Create test** again to start the run. Every selected model receives
+   the same prompt and appears as a separate result in the test group.
+7. Compare the rendered result and source or prompt, then optionally give each
+   result a score from 0–10 and add scoring notes.
+
+Each selected model is a separate billable OpenRouter request. **Re-run** starts
+a new request for one result. **Add model to test** runs another model with the
+exact prompt already saved for that test, which is useful for fair comparisons.
+You can also stop an active run or permanently delete an individual result.
+
+### Choose a test type
+
+| Benchmark tab | What you provide | What Bench Marker produces |
+| --- | --- | --- |
+| **Text + skills** | A reusable instruction (skill) and a user prompt | Plain-text responses |
+| **HTML page generation** | A description of a page or interface | Standalone HTML with a live preview |
+| **Game maker** | Tetris, Pac-Man, or Flappy Bird, plus optional style/rule instructions | A playable browser game |
+| **Remotion motion graphic** | A description of a short animation | Model-written Remotion/React code rendered to MP4 |
+| **Square image graphic** | A description of a square social graphic | Model-written HTML captured as a 1080×1080 PNG |
+| **Strudel song → MP3** | A description of the music, mood, instruments, and tempo | Model-written Strudel code rendered to MP3 |
+| **Live SVG draw** | A description of what to illustrate | SVG that appears as complete shapes stream in |
+| **Live pen drawing** | A description of what to sketch | Animated pen strokes on a square canvas |
+
+The media types have additional local dependencies. Remotion requires its Node
+template and browser; square images require Chromium; Strudel requires its Node
+template, Chromium, and FFmpeg. See [Rendering setup](#rendering-setup).
+
+### Create a Text + skills test
+
+A skill is the reusable system instruction applied to a text test. For example,
+you might create a skill named `Concise technical reviewer` with instructions
+about tone, format, review criteria, and what the response must include.
+
+1. Open **Text + skills** and select **Create test**.
+2. Select **Manage skills**, then create or edit a named instruction.
+3. Select that skill and enter the user prompt containing the actual material or
+   question to process.
+4. Select the models and start the test.
+
+Bench Marker saves a snapshot of both the skill and user prompt with every
+result, so editing the skill later does not change what an earlier test used.
+
+### Create a Remotion or other creative test
+
+Describe the result rather than writing implementation code. For a Remotion
+test, specify details such as duration, visual hierarchy, colours, copy, motion,
+and timing. For an HTML page, image, drawing, or song, describe the desired
+content and style just as you would brief a designer or developer. Bench Marker
+adds the technical output rules and asks each selected model to generate the
+appropriate source format.
+
+The current interface creates tests within the eight built-in benchmark types.
+Adding an entirely new output type or renderer requires extending the
+application code.
 
 ## Configuration
 
@@ -159,7 +230,6 @@ GitHub Actions runs the same checks for pushes and pull requests.
 | `GET` | `/api/runs/:id/image` | Fetch a rendered PNG |
 | `GET` | `/api/runs/:id/audio` | Fetch a rendered MP3 |
 | `GET/POST` | `/api/settings` | Read masked settings or update local settings |
-| `GET` | `/api/leaderboard` | Aggregate model scores and costs |
 
 ## License
 

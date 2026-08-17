@@ -1064,35 +1064,6 @@
       background: #fbfaf8;
     }
 
-    .rank {
-      display: inline-flex;
-      width: 28px;
-      height: 28px;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      background: var(--accent-soft);
-      color: var(--accent);
-      font-weight: 700;
-      font-size: 0.78rem;
-    }
-
-    .rank.gold {
-      background: #fff1cf;
-      color: #8a5a08;
-    }
-
-    .lb-group { margin-bottom: 28px; }
-    .lb-group:last-child { margin-bottom: 0; }
-    .lb-group h3 {
-      margin-bottom: 10px;
-      font-size: 0.95rem;
-      text-transform: none;
-      letter-spacing: -0.02em;
-      color: var(--text);
-      font-weight: 650;
-    }
-
     .tiny { font-size: 0.8rem; color: var(--muted); }
 
     code {
@@ -1521,8 +1492,7 @@
       modelFilter: "",
       modelHighlight: 0, // keyboard highlight index in search results
       runs: [],
-      leaderboard: [],
-      activeTab: "leaderboard",
+      activeTab: "new-models",
       pollTimer: null,
       pollMs: 0,
       replayTimers: {},
@@ -1598,7 +1568,6 @@
 
     function renderTabs() {
       const items = [
-        { key: "leaderboard", label: "Leaderboard" },
         { key: "new-models", label: "New models" },
         ...state.tasks.map((t) => ({ key: String(t.id), label: t.name })),
         { key: "settings", label: "Settings" },
@@ -1613,16 +1582,14 @@
     }
 
     function goTab(key) {
-      if (key === "leaderboard" || key === "settings" || key === "new-models") {
+      if (key === "settings" || key === "new-models") {
         state.activeTab = key;
       } else {
         state.activeTab = Number(key);
       }
       renderTabs();
       renderMain();
-      if (state.activeTab === "leaderboard") {
-        loadLeaderboard().catch((err) => toast(err.message, true));
-      } else if (state.activeTab === "settings") {
+      if (state.activeTab === "settings") {
         loadSettings().catch((err) => toast(err.message, true));
       } else if (state.activeTab === "new-models") {
         loadNewModelsPage().catch((err) => toast(err.message, true));
@@ -1638,85 +1605,6 @@
     });
 
     $("health-pill").addEventListener("click", () => goTab("settings"));
-
-    function renderLeaderboard() {
-      if (!state.leaderboard.length) {
-        return `
-          <div class="panel">
-            <h2>Leaderboard</h2>
-            <p class="lede">Scores across every benchmark. Rankings appear after you run models and score their outputs.</p>
-            <div class="empty">
-              <strong>No scores yet</strong>
-              Open a benchmark tab, run a few models, then give each result a score from 0–10.
-            </div>
-          </div>
-        `;
-      }
-
-      const byTask = {};
-      for (const row of state.leaderboard) {
-        (byTask[row.task_id] ||= { name: row.task_name, rows: [] }).rows.push(row);
-      }
-
-      const groups = Object.values(byTask).map((group) => {
-        const ranked = [...group.rows].sort((a, b) => {
-          const as = a.avg_score == null ? -1 : a.avg_score;
-          const bs = b.avg_score == null ? -1 : b.avg_score;
-          return bs - as;
-        });
-        return `
-          <div class="lb-group">
-            <h3>${escapeHtml(group.name)}</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Model</th>
-                  <th>Avg score</th>
-                  <th>Best</th>
-                  <th>Scored</th>
-                  <th>Runs</th>
-                  <th>Avg latency</th>
-                  <th>Avg cost</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${ranked.map((r, i) => `
-                  <tr>
-                    <td><span class="rank ${i === 0 && r.avg_score != null ? "gold" : ""}">${i + 1}</span></td>
-                    <td>
-                      ${(() => {
-                        const labels = formatModelPresentation(r.model_openrouter_id, r.model_display_name);
-                        return `
-                          <div>${escapeHtml(labels.title)}</div>
-                          <div class="tiny">${escapeHtml(labels.provider)}</div>
-                        `;
-                      })()}
-                    </td>
-                    <td class="score">${r.avg_score != null ? Number(r.avg_score).toFixed(2) : "—"}</td>
-                    <td>${r.best_score != null ? Number(r.best_score).toFixed(1) : "—"}</td>
-                    <td>${r.scored_count || 0}</td>
-                    <td>${r.run_count} <span class="tiny">(${r.completed_count || 0} ok)</span></td>
-                    <td>${r.avg_latency_ms != null ? Math.round(r.avg_latency_ms) + " ms" : "—"}</td>
-                    <td>${formatRunCost(r.avg_cost_usd) || "—"}
-                      ${r.total_cost_usd != null ? `<div class="tiny">total ${formatRunCost(r.total_cost_usd)}</div>` : ""}
-                    </td>
-                  </tr>
-                `).join("")}
-              </tbody>
-            </table>
-          </div>
-        `;
-      }).join("");
-
-      return `
-        <div class="panel">
-          <h2>Leaderboard</h2>
-          <p class="lede">Models ranked by the scores you assign on each benchmark.</p>
-          ${groups}
-        </div>
-      `;
-    }
 
     function renderSettings() {
       const s = state.settings || {};
@@ -3164,10 +3052,6 @@
 
     function renderMain() {
       const main = $("main");
-      if (state.activeTab === "leaderboard") {
-        main.innerHTML = renderLeaderboard();
-        return;
-      }
       if (state.activeTab === "new-models") {
         main.innerHTML = renderNewModelsPage();
         bindNewModelsEvents();
@@ -3732,7 +3616,6 @@
               body: "{}",
             });
             await loadRunsForActive({ patch: true });
-            await loadLeaderboard().catch(() => {});
             toast(
               data.updated
                 ? `Backfilled cost on ${data.updated} run(s)`
@@ -3832,7 +3715,6 @@
             });
             toast("Score saved");
             await loadRunsForActive({ patch: true });
-            await loadLeaderboard();
           } catch (err) {
             toast(err.message, true);
           }
@@ -3882,7 +3764,6 @@
             state.runs = state.runs.filter((r) => r.id !== id);
             toast("Result deleted");
             await loadRunsForActive({ patch: true });
-            await loadLeaderboard().catch(() => {});
           } catch (err) {
             btn.disabled = false;
             toast(err.message, true);
@@ -3924,12 +3805,11 @@
       const data = await api("/api/tasks");
       state.tasks = data.tasks || [];
       if (
-        state.activeTab !== "leaderboard" &&
         state.activeTab !== "settings" &&
         state.activeTab !== "new-models"
       ) {
         if (!state.tasks.some((t) => t.id === state.activeTab)) {
-          state.activeTab = "leaderboard";
+          state.activeTab = state.tasks[0]?.id ?? "new-models";
         }
       }
       renderTabs();
@@ -4634,7 +4514,6 @@
 
     async function loadRunsForActive(opts = {}) {
       if (
-        state.activeTab === "leaderboard" ||
         state.activeTab === "settings" ||
         state.activeTab === "new-models"
       ) return;
@@ -4669,12 +4548,6 @@
       else stopPolling();
     }
 
-    async function loadLeaderboard() {
-      const data = await api("/api/leaderboard");
-      state.leaderboard = data.leaderboard || [];
-      if (state.activeTab === "leaderboard") renderMain();
-    }
-
     function startPolling() {
       const task = state.tasks.find((t) => t.id === state.activeTab);
       const ms = task && (task.kind === "draw" || task.kind === "pen") ? 400 : 2500;
@@ -4683,7 +4556,6 @@
       state.pollMs = ms;
       state.pollTimer = setInterval(() => {
         if (
-          state.activeTab !== "leaderboard" &&
           state.activeTab !== "settings" &&
           state.activeTab !== "new-models"
         ) {
@@ -4724,7 +4596,9 @@
         await loadRunsForActive();
       } else {
         ensureOpenrouterModels().catch(() => {});
-        await loadLeaderboard();
+        state.activeTab = "new-models";
+        renderTabs();
+        await loadNewModelsPage().catch(() => {});
         renderMain();
       }
     }
