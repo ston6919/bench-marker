@@ -1764,7 +1764,7 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_response(206 if range_header.startswith("bytes=") else 200)
         self.send_header("Content-Type", "video/mp4")
         self.send_header("Content-Length", str(length))
-        self.send_header("Cache-Control", "no-store")
+        self.send_header("Cache-Control", "private, max-age=31536000, immutable")
         self.send_header("Accept-Ranges", "bytes")
         if range_header.startswith("bytes="):
             self.send_header("Content-Range", f"bytes {start}-{end}/{size}")

@@ -2531,12 +2531,15 @@
       if (!host || !panel) return false;
       if (String(panel.dataset.taskId) !== String(task.id)) return false;
 
-      // Polling must not replace a media element while the user is playing it.
-      // Recreating the element resets playback every polling interval.
-      const mediaInUse = [...host.querySelectorAll("video, audio")].some((media) =>
-        !media.paused || (media.currentTime > 0 && !media.ended)
-      );
-      if (mediaInUse) return true;
+      // Keep completed media elements alive across polling refreshes so their
+      // local-file request, buffer, playback position, and controls survive.
+      const retainedMedia = [...host.querySelectorAll(".result-card[data-run-id] video, .result-card[data-run-id] audio")]
+        .map((media) => ({
+          media,
+          runId: media.closest(".result-card")?.dataset.runId || "",
+          tag: media.tagName.toLowerCase(),
+          src: media.getAttribute("src") || "",
+        }));
 
       // Keep create-test modal open: only refresh results
       if ($("create-test-modal")?.classList.contains("open")) {
@@ -2547,7 +2550,17 @@
         .filter((r) => Number(r.task_id) === Number(task.id))
         .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
 
-      host.innerHTML = renderResultsSectionInner(task, runs);
+      const next = document.createElement("div");
+      next.innerHTML = renderResultsSectionInner(task, runs);
+      for (const item of retainedMedia) {
+        const card = [...next.querySelectorAll(".result-card[data-run-id]")]
+          .find((candidate) => candidate.dataset.runId === item.runId);
+        const replacement = card?.querySelector(item.tag);
+        if (replacement && replacement.getAttribute("src") === item.src) {
+          replacement.replaceWith(item.media);
+        }
+      }
+      host.replaceChildren(...next.childNodes);
       bindResultsEvents(task);
       return true;
     }
